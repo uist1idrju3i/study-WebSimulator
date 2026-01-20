@@ -17,7 +17,7 @@ graph TB
     subgraph "開発環境"
         RB[sample.rb<br/>Rubyソースコード]
         MRBC[mrbc<br/>mruby/cコンパイラ]
-        BC[sample.c<br/>バイトコード配列]
+        BC[sample.mrb<br/>バイトコード配列]
     end
     
     subgraph "ビルドシステム"
@@ -39,7 +39,7 @@ graph TB
     end
     
     RB -->|mrbc -B| BC
-    BC --> EMCC
+    BC --> HTML
     HAL --> EMCC
     MAIN --> EMCC
     MRUBYC --> EMCC
@@ -103,7 +103,7 @@ study-WebSimulator/
     │       └── hal.c           # HAL実装
     └── rb/
         ├── sample.rb           # サンプルRubyコード
-        └── sample.c            # コンパイル済みバイトコード
+        └── sample.mrb          # コンパイル済みバイトコード
 ```
 
 ### 設計思想
