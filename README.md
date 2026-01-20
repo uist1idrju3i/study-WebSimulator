@@ -38,7 +38,7 @@ graph TB
         OUTPUT[コンソール出力]
     end
     
-    RB -->|mrbc -B| BC
+    RB -->|mrbc| BC
     BC --> HTML
     HAL --> EMCC
     MAIN --> EMCC
