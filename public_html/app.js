@@ -79,7 +79,15 @@ async function runBytecode(bytecode) {
     const heapU8 = new Uint8Array(mrubycModule.wasmMemory.buffer);
     heapU8.set(bytecode, bytecodePtr);
     
-    const result = mrubycModule._mrbc_wasm_run(bytecodePtr, bytecode.length);
+    // Use ccall with async: true to properly handle ASYNCIFY
+    // This ensures that emscripten_sleep calls are properly awaited
+    const result = await mrubycModule.ccall(
+      'mrbc_wasm_run',
+      'number',
+      ['number', 'number'],
+      [bytecodePtr, bytecode.length],
+      { async: true }
+    );
     
     appendOutput('\n--- Execution End (return: ' + result + ') ---\n', 'info');
     
