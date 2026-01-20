@@ -48,15 +48,12 @@ async function initModule() {
     
     mrubycModule._mrbc_wasm_init();
     
-    const versionPtr = mrubycModule._mrbc_wasm_version();
-    const version = mrubycModule.UTF8ToString(versionPtr);
-    versionInfo.textContent = 'mruby/c version: ' + version;
+    versionInfo.textContent = 'mruby/c module initialized';
     
     setStatus('ready', 'mruby/c module ready');
     runSampleBtn.disabled = false;
     
     appendOutput('[INFO] mruby/c WebAssembly module loaded successfully.\n', 'info');
-    appendOutput('[INFO] mruby/c version: ' + version + '\n', 'info');
   } catch (error) {
     setStatus('error', 'Failed to load module: ' + error.message);
     appendOutput('[ERROR] Failed to load mruby/c module: ' + error.message + '\n', 'error');

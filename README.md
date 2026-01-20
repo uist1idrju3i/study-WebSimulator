@@ -125,7 +125,6 @@ Emscriptenを使用してmruby/cをWebAssemblyにビルドするための設定�
 **エクスポートされる関数:**
 - `_mrbc_wasm_init`: VM初期化
 - `_mrbc_wasm_run`: バイトコード実行
-- `_mrbc_wasm_version`: バージョン取得
 - `_malloc` / `_free`: メモリ管理
 
 ### 2. src/lib/mrubyc/hal.h (HALヘッダー)
@@ -193,13 +192,11 @@ graph TB
         A[createMrubycModule]
         B[_mrbc_wasm_init]
         C[_mrbc_wasm_run]
-        D[_mrbc_wasm_version]
     end
     
     subgraph "C側 main.c"
         E[mrbc_wasm_init]
         F[mrbc_wasm_run]
-        G[mrbc_wasm_version]
     end
     
     subgraph "mruby/c VM"
@@ -214,7 +211,6 @@ graph TB
     A --> D
     B --> E
     C --> F
-    D --> G
     E --> H
     F --> I
     F --> J

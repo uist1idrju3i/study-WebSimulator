@@ -51,14 +51,6 @@ int mrbc_wasm_run(const uint8_t *bytecode, int size)
   return ret == 1 ? 0 : ret;
 }
 
-EMSCRIPTEN_KEEPALIVE
-const char* mrbc_wasm_version(void)
-{
-  /* Note: Update this version when upgrading mruby/c submodule.
-     mruby/c does not provide a C preprocessor macro for the version string. */
-  return "3.4";
-}
-
 int main(void)
 {
   mrbc_wasm_init();

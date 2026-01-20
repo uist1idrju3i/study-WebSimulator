@@ -11,15 +11,17 @@ BUILD_DIR = public_html
 CC = emcc
 
 # Compiler flags
-CFLAGS = -O2 \
+CFLAGS = -O3 \
+         -flto \
          -I$(MRUBYC_SRC_DIR) \
          -I$(HAL_DIR) \
+         -DMRBC_SCHEDULER_EXIT=1 -DMRBC_USE_FLOAT=1 -DMRBC_USE_MATH=1 -DMAX_VM_COUNT=5 \
          -DNDEBUG
 
 # Emscripten specific flags
 EMFLAGS = -s WASM=1 \
           -s EXPORTED_RUNTIME_METHODS='["ccall","cwrap","UTF8ToString","wasmMemory"]' \
-          -s EXPORTED_FUNCTIONS='["_main","_mrbc_wasm_init","_mrbc_wasm_run","_mrbc_wasm_version","_malloc","_free"]' \
+          -s EXPORTED_FUNCTIONS='["_main","_mrbc_wasm_init","_mrbc_wasm_run","_malloc","_free"]' \
           -s ALLOW_MEMORY_GROWTH=1 \
           -s ASYNCIFY \
           -s ASYNCIFY_IMPORTS='["emscripten_sleep"]' \
