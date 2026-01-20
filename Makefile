@@ -1,9 +1,4 @@
 # Makefile for building mruby/c WebAssembly module with Emscripten
-#
-# Copyright (C) 2015- Kyushu Institute of Technology.
-# Copyright (C) 2015- Shimane IT Open-Innovation Center.
-#
-# This file is distributed under BSD 3-Clause License.
 
 # Directories
 MRUBYC_DIR = mrubyc
@@ -64,15 +59,16 @@ MAIN_SRCS = $(SRC_DIR)/main.c
 SRCS = $(MRUBYC_SRCS) $(HAL_SRCS) $(MAIN_SRCS)
 
 # Output files
-OUTPUT_JS = $(BUILD_DIR)/mrubyc.js
-OUTPUT_WASM = $(BUILD_DIR)/mrubyc.wasm
+MRUBYC_BUILD_DIR = $(BUILD_DIR)/mrubyc
+OUTPUT_JS = $(MRUBYC_BUILD_DIR)/mrubyc.js
+OUTPUT_WASM = $(MRUBYC_BUILD_DIR)/mrubyc.wasm
 
 # Default target
-all: $(BUILD_DIR) $(OUTPUT_JS)
+all: $(MRUBYC_BUILD_DIR) $(OUTPUT_JS)
 
 # Create build directory
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+$(MRUBYC_BUILD_DIR):
+	mkdir -p $(MRUBYC_BUILD_DIR)
 
 # Build WebAssembly module
 $(OUTPUT_JS): $(SRCS)

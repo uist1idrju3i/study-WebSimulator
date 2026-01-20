@@ -1,13 +1,6 @@
 /*! @file
   @brief
   Main entry point for mruby/c WebAssembly module.
-
-  <pre>
-  Copyright (C) 2015- Kyushu Institute of Technology.
-  Copyright (C) 2015- Shimane IT Open-Innovation Center.
-
-  This file is distributed under BSD 3-Clause License.
-  </pre>
 */
 
 #include <stdio.h>
