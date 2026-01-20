@@ -1,5 +1,7 @@
 # study-WebSimulator
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/uist1idrju3i/study-WebSimulator)
+
 mruby/cをEmscriptenでWebAssemblyにビルドし、Webブラウザ上で動作させるプロジェクトです。
 
 ## 概要
