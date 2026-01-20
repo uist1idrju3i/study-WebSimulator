@@ -364,11 +364,17 @@
 
     const MAX_FILE_SIZE = 1024 * 1024; // 1MB limit
 
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + ' bytes';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+
     bytecodeFile.addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (file) {
         if (file.size > MAX_FILE_SIZE) {
-          appendOutput('[ERROR] File too large: ' + file.name + ' (' + file.size + ' bytes). Maximum size is 1MB.\n', 'error');
+          appendOutput('[ERROR] File too large: ' + file.name + ' (' + formatFileSize(file.size) + '). Maximum size is 1MB.\n', 'error');
           customBytecode = null;
           runCustomBtn.disabled = true;
           return;

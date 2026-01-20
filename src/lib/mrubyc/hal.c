@@ -25,8 +25,8 @@ EM_JS(void, js_console_write, (const char *buf, int nbytes), {
   }
 });
 
-EM_JS(void, js_console_error, (const char *msg), {
-  const text = UTF8ToString(msg);
+EM_JS(void, js_console_error, (const char *buf, int nbytes), {
+  const text = UTF8ToString(buf, nbytes);
   if (typeof window !== 'undefined' && window.mrubycError) {
     window.mrubycError(text);
   } else {
@@ -42,7 +42,7 @@ void hal_delay_ms(int ms)
 int hal_write(int fd, const void *buf, int nbytes)
 {
   if (fd == 2) {
-    js_console_error((const char *)buf);
+    js_console_error((const char *)buf, nbytes);
   } else {
     js_console_write((const char *)buf, nbytes);
   }
@@ -57,7 +57,7 @@ int hal_flush(int fd)
 void hal_abort(const char *s)
 {
   if (s) {
-    js_console_error(s);
+    js_console_error(s, (int)strlen(s));
   }
   emscripten_force_exit(1);
 }

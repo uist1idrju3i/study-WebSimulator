@@ -27,6 +27,7 @@ EMFLAGS = -s WASM=1 \
           -s EXPORTED_FUNCTIONS='["_main","_mrbc_wasm_init","_mrbc_wasm_run","_mrbc_wasm_version","_malloc","_free"]' \
           -s ALLOW_MEMORY_GROWTH=1 \
           -s ASYNCIFY \
+          -s ASYNCIFY_IMPORTS='["emscripten_sleep"]' \
           -s MODULARIZE=1 \
           -s EXPORT_NAME='createMrubycModule' \
           --no-entry

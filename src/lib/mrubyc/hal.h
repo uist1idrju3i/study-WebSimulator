@@ -20,8 +20,13 @@ extern "C" {
 #define MRBC_TICK_UNIT 1
 #define MRBC_TIMESLICE_TICK_COUNT 10
 
+#ifndef MRBC_NO_TIMER
 #define MRBC_NO_TIMER
+#endif
+
+#ifndef MRBC_SCHEDULER_EXIT
 #define MRBC_SCHEDULER_EXIT 1
+#endif
 
 void mrbc_tick(void);
 
