@@ -11,19 +11,29 @@ BUILD_DIR = public_html
 CC = emcc
 
 # Compiler flags
+# Note: -flto is removed because Link-Time Optimization can interfere with
+# Emscripten's ASYNCIFY by inlining functions across compilation units,
+# which confuses the ASYNCIFY call graph analysis.
 CFLAGS = -O3 \
-         -flto \
          -I$(MRUBYC_SRC_DIR) \
          -I$(HAL_DIR) \
          -DMRBC_SCHEDULER_EXIT=1 -DMRBC_USE_FLOAT=1 -DMRBC_USE_MATH=1 -DMAX_VM_COUNT=5 \
          -DNDEBUG
 
 # Emscripten specific flags
+# ASYNCIFY_STACK_SIZE is increased from the default 4096 to 16384 bytes
+# to accommodate the mruby/c VM's deeper call stack when sleep_ms is called.
+# ASYNCIFY_ADD uses wildcard pattern to ensure all functions that may be in
+# the call stack when emscripten_sleep is called are properly asyncified.
+# This is necessary because -O3 optimization can inline functions, which may
+# confuse ASYNCIFY's automatic detection.
 EMFLAGS = -s WASM=1 \
           -s EXPORTED_RUNTIME_METHODS='["ccall","cwrap","UTF8ToString","wasmMemory"]' \
           -s EXPORTED_FUNCTIONS='["_main","_mrbc_wasm_init","_mrbc_wasm_run","_malloc","_free"]' \
           -s ALLOW_MEMORY_GROWTH=1 \
           -s ASYNCIFY \
+          -s ASYNCIFY_STACK_SIZE=16384 \
+          -s 'ASYNCIFY_ADD=["mrbc_*","hal_*","main"]' \
           -s ASYNCIFY_IMPORTS='["emscripten_sleep"]' \
           -s MODULARIZE=1 \
           -s EXPORT_NAME='createMrubycModule' \
