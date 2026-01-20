@@ -106,16 +106,6 @@ study-WebSimulator/
         └── sample.mrb          # コンパイル済みバイトコード
 ```
 
-### 設計思想
-
-**ファイル分離の原則:**
-- **HTML/CSS/JSの分離**: index.htmlはマークアップのみを含み、スタイルとロジックは別ファイルに分離しています。これにより、保守性と可読性が向上します。
-- **mruby/c関連ファイルの分離**: Emscriptenが生成するWASMファイル（mrubyc.js, mrubyc.wasm）は`public_html/mrubyc/`フォルダに配置し、mruby/cのLICENSEファイルと共に管理しています。これにより、ライセンス遵守が明確になります。
-
-**著作権表示の方針:**
-- mruby/c由来のコードを含むファイル（hal.h, hal.c）には、mruby/cの著作権表示を記載しています。
-- 独自に作成したファイル（Makefile, main.c, style.css, app.js, index.html）には、mruby/cの著作権表示は含めていません。
-
 ## 作成・変更したファイルの解説
 
 ### 1. Makefile
@@ -294,14 +284,14 @@ sequenceDiagram
 
 ### 8. public_html/sample_bytecode.js
 
-`src/rb/sample.c`のバイトコードをJavaScript配列として定義したファイルです。
+`src/rb/sample.mrb`のバイトコードをJavaScript配列として定義したファイルです。
 
 **元のRubyコード (sample.rb):**
 ```ruby
 printf "#{RUBY_ENGINE} #{MRUBYC_VERSION} (mruby:#{MRUBY_VERSION} ruby:#{RUBY_VERSION})\n"
-printf "Hello, mruby/c!"
+puts "Hello, mruby/c!"
 sleep_ms 1000
-printf "Goodbye!"
+puts "Goodbye!"
 ```
 
 ## ビルド方法
