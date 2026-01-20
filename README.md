@@ -119,6 +119,8 @@ Emscriptenを使用してmruby/cをWebAssemblyにビルドするための設定�
 | `CFLAGS` | `-O3 -flto -DNDEBUG` | 最適化レベル3、デバッグ無効 |
 | `WASM=1` | - | WebAssembly出力を有効化 |
 | `ASYNCIFY` | - | 非同期処理（sleep等）のサポート |
+| `ASYNCIFY_STACK_SIZE` | `16384` | ASYNCIFY用スタックサイズ（デフォルト4096から増加） |
+| `ASYNCIFY_ADD` | `["mrbc_*","hal_*","main"]` | ASYNCIFY対象関数のパターン |
 | `MODULARIZE=1` | - | ESモジュール形式で出力 |
 | `ALLOW_MEMORY_GROWTH=1` | - | 動的メモリ拡張を許可 |
 
@@ -241,7 +243,7 @@ WASMモジュールの初期化、バイトコード実行、ファイルアッ�
 
 **主要な機能:**
 - WASMモジュールの非同期初期化
-- バイトコードのメモリコピーと実行
+- バイトコードのメモリコピーと実行（`ccall`の`async: true`オプションでASYNCIFYに対応）
 - ファイルサイズ検証（1MB制限）
 - エラーハンドリングとメモリ解放
 

@@ -11,10 +11,8 @@ BUILD_DIR = public_html
 CC = emcc
 
 # Compiler flags
-# Note: -flto is removed because Link-Time Optimization can interfere with
-# Emscripten's ASYNCIFY by inlining functions across compilation units,
-# which confuses the ASYNCIFY call graph analysis.
 CFLAGS = -O3 \
+         -flto \
          -I$(MRUBYC_SRC_DIR) \
          -I$(HAL_DIR) \
          -DMRBC_SCHEDULER_EXIT=1 -DMRBC_USE_FLOAT=1 -DMRBC_USE_MATH=1 -DMAX_VM_COUNT=5 \
