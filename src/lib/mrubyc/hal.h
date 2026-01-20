@@ -1,6 +1,6 @@
 /*! @file
   @brief
-  Hardware abstraction layer minimum set sample.
+  Hardware abstraction layer for Emscripten/WebAssembly environment.
 
   <pre>
   Copyright (C) 2015- Kyushu Institute of Technology.
@@ -13,23 +13,31 @@
 #ifndef MRBC_SRC_HAL_H_
 #define MRBC_SRC_HAL_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define MRBC_TICK_UNIT 1
 #define MRBC_TIMESLICE_TICK_COUNT 10
+
+#define MRBC_NO_TIMER
+#define MRBC_SCHEDULER_EXIT 1
+
+void mrbc_tick(void);
 
 #define hal_init()        ((void)0)
 #define hal_enable_irq()  ((void)0)
 #define hal_disable_irq() ((void)0)
-#define hal_idle_cpu()    (delay(MRBC_TICK_UNIT), mrbc_tick())  // delay 1ms
+
+void hal_delay_ms(int ms);
+#define hal_idle_cpu()    (hal_delay_ms(MRBC_TICK_UNIT), mrbc_tick())
 
 int hal_write(int fd, const void *buf, int nbytes);
 int hal_flush(int fd);
 void hal_abort(const char *s);
 
-/*
-  or define the empty macros instead of function.
-#define hal_write(fd,buf,nbytes)  ((void)0)
-#define hal_flush(fd)             ((void)0)
-#define hal_abort(s)              ((void)0)
-*/
+#ifdef __cplusplus
+}
+#endif
 
 #endif
