@@ -5,7 +5,7 @@ puts ("Hello Ruby")
 WIDTH = 10
 HEIGHT = 6
 LED_COUNT = WIDTH * HEIGHT
-MAX_BRIGHTNESS = 5 # 輝度制限
+MAX_BRIGHTNESS = 255 # 輝度制限
 
 # 円の中心座標
 CENTER_X = 4.5
