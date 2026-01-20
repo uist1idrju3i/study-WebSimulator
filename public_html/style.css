@@ -221,3 +221,31 @@ footer a {
 footer a:hover {
   text-decoration: underline;
 }
+
+#dot-container {
+    display: grid;
+    grid-template-rows: repeat(6, 30px);
+    grid-template-columns: repeat(10, 30px);
+    gap: 0;
+    direction: rtl; 
+    grid-auto-flow: column;    
+    width: fit-content;
+    border: 1px solid #ddd;
+    background-color: #f0f0f0;
+}
+
+.dot {
+    width: 30px;
+    height: 30px;
+    background-color: #ccc;
+    border-radius: 50%;
+    box-sizing: border-box;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #666;
+    
+    transition: background-color 0.2s;
+}
