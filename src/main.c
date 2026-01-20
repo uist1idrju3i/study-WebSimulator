@@ -41,13 +41,17 @@ int mrbc_wasm_run(const uint8_t *bytecode, int size)
 
   mrbc_tcb *tcb = mrbc_create_task(bytecode, NULL);
   if (tcb == NULL) {
+    mrbc_cleanup();
+    initialized = 0;
+    mrbc_wasm_init();
     return -1;
   }
 
   int ret = mrbc_run();
   mrbc_cleanup();
 
-  mrbc_init(memory_pool, MRBC_MEMORY_SIZE);
+  initialized = 0;
+  mrbc_wasm_init();
 
   return ret == 1 ? 0 : ret;
 }

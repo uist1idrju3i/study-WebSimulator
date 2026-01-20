@@ -323,14 +323,16 @@
       
       appendOutput('\n--- Execution Start ---\n', 'info');
       
+      let bytecodePtr = 0;
       try {
-        const bytecodePtr = mrubycModule._malloc(bytecode.length);
+        bytecodePtr = mrubycModule._malloc(bytecode.length);
+        if (!bytecodePtr) {
+          throw new Error('Memory allocation failed in WebAssembly module.');
+        }
         const heapU8 = new Uint8Array(mrubycModule.wasmMemory.buffer);
         heapU8.set(bytecode, bytecodePtr);
         
         const result = mrubycModule._mrbc_wasm_run(bytecodePtr, bytecode.length);
-        
-        mrubycModule._free(bytecodePtr);
         
         appendOutput('\n--- Execution End (return: ' + result + ') ---\n', 'info');
         
@@ -342,6 +344,9 @@
       } catch (error) {
         appendOutput('\n[ERROR] Execution failed: ' + error.message + '\n', 'error');
       } finally {
+        if (bytecodePtr) {
+          mrubycModule._free(bytecodePtr);
+        }
         isRunning = false;
         setStatus('ready', 'mruby/c module ready');
         runSampleBtn.disabled = false;
@@ -357,9 +362,17 @@
       }
     });
 
+    const MAX_FILE_SIZE = 1024 * 1024; // 1MB limit
+
     bytecodeFile.addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (file) {
+        if (file.size > MAX_FILE_SIZE) {
+          appendOutput('[ERROR] File too large: ' + file.name + ' (' + file.size + ' bytes). Maximum size is 1MB.\n', 'error');
+          customBytecode = null;
+          runCustomBtn.disabled = true;
+          return;
+        }
         const reader = new FileReader();
         reader.onload = function(event) {
           customBytecode = new Uint8Array(event.target.result);

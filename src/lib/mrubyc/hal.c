@@ -41,7 +41,11 @@ void hal_delay_ms(int ms)
 
 int hal_write(int fd, const void *buf, int nbytes)
 {
-  js_console_write((const char *)buf, nbytes);
+  if (fd == 2) {
+    js_console_error((const char *)buf);
+  } else {
+    js_console_write((const char *)buf, nbytes);
+  }
   return nbytes;
 }
 
