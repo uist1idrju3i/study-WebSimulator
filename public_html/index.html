@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mruby/c WebAssembly Simulator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>mruby/c WebAssembly Simulator</h1>
+  <p class="subtitle">Run mruby/c bytecode in your browser</p>
+
+  <div class="container">
+    <div class="section-title">Status</div>
+    <div class="status">
+      <div id="statusIndicator" class="status-indicator loading"></div>
+      <span id="statusText">Loading mruby/c module...</span>
+    </div>
+    <div id="versionInfo" style="color: #666; font-size: 14px;"></div>
+  </div>
+
+  <div class="container">
+    <div class="section-title">Run Sample Program</div>
+    <div class="info-box">
+      <h4>Sample Ruby Code (sample.rb)</h4>
+      <p>
+        <code>printf "#{RUBY_ENGINE} #{MRUBYC_VERSION} (mruby:#{MRUBY_VERSION} ruby:#{RUBY_VERSION})\n"</code><br>
+        <code>printf "Hello, mruby/c!"</code><br>
+        <code>sleep_ms 1000</code><br>
+        <code>printf "Goodbye!"</code>
+      </p>
+    </div>
+    <div class="button-group">
+      <button id="runSampleBtn" class="btn-success" disabled>Run Sample Program</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="section-title">Load Custom Bytecode</div>
+    <div class="file-input-wrapper">
+      <label for="bytecodeFile">Select mruby/c bytecode file (.mrb):</label>
+      <input type="file" id="bytecodeFile" accept=".mrb,.bin">
+    </div>
+    <div class="button-group">
+      <button id="runCustomBtn" class="btn-primary" disabled>Run Custom Bytecode</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="section-title">Output Console</div>
+    <div class="button-group">
+      <button id="clearBtn" class="btn-secondary">Clear Output</button>
+    </div>
+    <div id="output" class="output-area"></div>
+  </div>
+
+  <footer>
+    <p>
+      <a href="https://deepwiki.com/uist1idrju3i/study-WebSimulator" target="_blank">
+        <img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki">
+      </a>
+    </p>
+    <p>
+      Powered by <a href="https://github.com/mrubyc/mrubyc" target="_blank">mruby/c</a> and 
+      <a href="https://emscripten.org/" target="_blank">Emscripten</a>
+    </p>
+    <p>
+      mruby/c is distributed under BSD 3-Clause License.<br>
+      Copyright (C) 2015- Kyushu Institute of Technology.<br>
+      Copyright (C) 2015- Shimane IT Open-Innovation Center.
+    </p>
+  </footer>
+
+  <script src="mrubyc/mrubyc.js"></script>
+  <script src="sample_bytecode.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
