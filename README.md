@@ -87,10 +87,14 @@ study-WebSimulator/
 ├── emsdk/                      # Emscripten SDK (サブモジュール)
 ├── mrubyc/                     # mruby/c (サブモジュール)
 ├── public_html/                # Web公開ディレクトリ
-│   ├── index.html              # GUI
-│   ├── mrubyc.js               # Emscripten生成JSグルーコード
-│   ├── mrubyc.wasm             # WebAssemblyモジュール
-│   └── sample_bytecode.js      # サンプルバイトコード
+│   ├── index.html              # HTMLマークアップ
+│   ├── style.css               # スタイルシート
+│   ├── app.js                  # アプリケーションロジック
+│   ├── sample_bytecode.js      # サンプルバイトコード
+│   └── mrubyc/                 # mruby/c WASM関連ファイル
+│       ├── mrubyc.js           # Emscripten生成JSグルーコード
+│       ├── mrubyc.wasm         # WebAssemblyモジュール
+│       └── LICENSE             # mruby/cライセンス
 └── src/
     ├── main.c                  # WASMエントリポイント
     ├── lib/
@@ -101,6 +105,16 @@ study-WebSimulator/
         ├── sample.rb           # サンプルRubyコード
         └── sample.c            # コンパイル済みバイトコード
 ```
+
+### 設計思想
+
+**ファイル分離の原則:**
+- **HTML/CSS/JSの分離**: index.htmlはマークアップのみを含み、スタイルとロジックは別ファイルに分離しています。これにより、保守性と可読性が向上します。
+- **mruby/c関連ファイルの分離**: Emscriptenが生成するWASMファイル（mrubyc.js, mrubyc.wasm）は`public_html/mrubyc/`フォルダに配置し、mruby/cのLICENSEファイルと共に管理しています。これにより、ライセンス遵守が明確になります。
+
+**著作権表示の方針:**
+- mruby/c由来のコードを含むファイル（hal.h, hal.c）には、mruby/cの著作権表示を記載しています。
+- 独自に作成したファイル（Makefile, main.c, style.css, app.js, index.html）には、mruby/cの著作権表示は含めていません。
 
 ## 作成・変更したファイルの解説
 
@@ -222,15 +236,29 @@ graph TB
 - mruby/cのメモリアロケータがこのプール内でメモリを管理
 - 実行後は`mrbc_cleanup()`でリソースを解放し、再初期化
 
-### 5. public_html/index.html (GUI)
+### 5. public_html/index.html (HTMLマークアップ)
 
-ブラウザ上でmruby/cを操作するためのユーザーインターフェースです。
+ブラウザ上でmruby/cを操作するためのユーザーインターフェースのHTMLマークアップです。スタイルとロジックは別ファイル（style.css, app.js）に分離されています。
 
 **機能:**
 1. **ステータス表示**: モジュールの読み込み状態とバージョン情報
 2. **サンプル実行**: 組み込みのサンプルプログラムを実行
 3. **カスタムバイトコード**: `.mrb`ファイルをアップロードして実行
 4. **出力コンソール**: 実行結果をリアルタイム表示
+
+### 6. public_html/style.css (スタイルシート)
+
+GUIのスタイル定義を含むCSSファイルです。レスポンシブデザインに対応し、ダークテーマのコンソール表示を実装しています。
+
+### 7. public_html/app.js (アプリケーションロジック)
+
+WASMモジュールの初期化、バイトコード実行、ファイルアップロード処理などのアプリケーションロジックを含むJavaScriptファイルです。
+
+**主要な機能:**
+- WASMモジュールの非同期初期化
+- バイトコードのメモリコピーと実行
+- ファイルサイズ検証（1MB制限）
+- エラーハンドリングとメモリ解放
 
 **JavaScript-WASM連携:**
 
@@ -264,7 +292,7 @@ sequenceDiagram
     JS->>HTML: 完了メッセージ表示
 ```
 
-### 6. public_html/sample_bytecode.js
+### 8. public_html/sample_bytecode.js
 
 `src/rb/sample.c`のバイトコードをJavaScript配列として定義したファイルです。
 
