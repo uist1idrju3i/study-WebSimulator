@@ -1,11 +1,6 @@
 /*
  * mruby/c WebAssembly Simulator - Application JavaScript
- *
- * Copyright (C) 2015- Kyushu Institute of Technology.
- * Copyright (C) 2015- Shimane IT Open-Innovation Center.
- *
- * This file is distributed under BSD 3-Clause License.
- */
+*/
 
 let mrubycModule = null;
 let isRunning = false;
