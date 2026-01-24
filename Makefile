@@ -27,14 +27,21 @@ CFLAGS = -O3 \
 # confuse ASYNCIFY's automatic detection.
 EMFLAGS = -s WASM=1 \
           -s EXPORTED_RUNTIME_METHODS='["ccall","cwrap","UTF8ToString","wasmMemory"]' \
-          -s EXPORTED_FUNCTIONS='["_main","_mrbc_wasm_init","_mrbc_wasm_run","_malloc","_free"]' \
+          -s EXPORTED_FUNCTIONS='["_main","_mrbc_wasm_init","_mrbc_wasm_run","_mrbc_wasm_print_statistics","_malloc","_free"]' \
           -s ALLOW_MEMORY_GROWTH=1 \
+          -s INITIAL_MEMORY=16777216 \
+          -s MAXIMUM_MEMORY=33554432 \
           -s ASYNCIFY \
           -s ASYNCIFY_STACK_SIZE=16384 \
           -s 'ASYNCIFY_ADD=["mrbc_*","hal_*","main"]' \
           -s ASYNCIFY_IMPORTS='["emscripten_sleep"]' \
           -s MODULARIZE=1 \
           -s EXPORT_NAME='createMrubycModule' \
+          -s ASSERTIONS=0 \
+          -s DISABLE_EXCEPTION_CATCHING=1 \
+          -s STACK_OVERFLOW_CHECK=0 \
+          -s FILESYSTEM=0 \
+          -s ENVIRONMENT='web' \
           --no-entry
 
 # mruby/c source files

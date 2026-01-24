@@ -12,6 +12,7 @@ const output = document.getElementById('output');
 const runSampleBtn = document.getElementById('runSampleBtn');
 const runCustomBtn = document.getElementById('runCustomBtn');
 const clearBtn = document.getElementById('clearBtn');
+const showStatsBtn = document.getElementById('showStatsBtn');
 const bytecodeFile = document.getElementById('bytecodeFile');
 
 let customBytecode = null;
@@ -156,5 +157,15 @@ runCustomBtn.addEventListener('click', function() {
 });
 
 clearBtn.addEventListener('click', clearOutput);
+
+showStatsBtn.addEventListener('click', function() {
+  if (mrubycModule) {
+    appendOutput('\n--- VM Statistics ---\n', 'info');
+    mrubycModule._mrbc_wasm_print_statistics();
+    appendOutput('--- End Statistics ---\n', 'info');
+  } else {
+    appendOutput('[ERROR] mruby/c module not loaded.\n', 'error');
+  }
+});
 
 initModule();
