@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <emscripten.h>
 #include "mrubyc.h"
+#include "api/pixels.h"
 
 #if !defined(MRBC_MEMORY_SIZE)
 #define MRBC_MEMORY_SIZE (1024 * 40)
@@ -33,7 +34,7 @@ int mrbc_wasm_run(const uint8_t *bytecode, int size)
   if (!initialized) {
     mrbc_wasm_init();
   }
-
+  api_pixels_define();
   mrbc_tcb *tcb = mrbc_create_task(bytecode, NULL);
   if (tcb == NULL) {
     mrbc_cleanup();

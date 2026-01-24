@@ -63,7 +63,8 @@ MRUBYC_SRCS = $(MRUBYC_SRC_DIR)/alloc.c \
 HAL_SRCS = $(HAL_DIR)/hal.c
 
 # Main source files
-MAIN_SRCS = $(SRC_DIR)/main.c
+MAIN_SRCS = $(SRC_DIR)/main.c \
+             $(SRC_DIR)/api/pixels.c
 
 # All source files
 SRCS = $(MRUBYC_SRCS) $(HAL_SRCS) $(MAIN_SRCS)
