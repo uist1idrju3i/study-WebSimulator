@@ -16,6 +16,7 @@ CFLAGS = -O3 \
          -I$(MRUBYC_SRC_DIR) \
          -I$(HAL_DIR) \
          -DMRBC_SCHEDULER_EXIT=1 -DMRBC_USE_FLOAT=1 -DMRBC_USE_MATH=1 -DMAX_VM_COUNT=5 \
+         -DMRBC_DEBUG \
          -DNDEBUG
 
 # Emscripten specific flags
@@ -25,6 +26,14 @@ CFLAGS = -O3 \
 # the call stack when emscripten_sleep is called are properly asyncified.
 # This is necessary because -O3 optimization can inline functions, which may
 # confuse ASYNCIFY's automatic detection.
+# The following settings disable several Emscripten runtime safety checks
+# to reduce code size and improve performance in production builds:
+#   ASSERTIONS=0             : disables runtime assertions
+#   DISABLE_EXCEPTION_CATCHING=1 : removes C++ exception handling support
+#   STACK_OVERFLOW_CHECK=0  : disables stack overflow checks
+# For development or when debugging runtime issues, consider building with:
+#   -s ASSERTIONS=1 -s DISABLE_EXCEPTION_CATCHING=0 -s STACK_OVERFLOW_CHECK=1
+# either by overriding EMFLAGS on the command line or in a separate debug Makefile.
 EMFLAGS = -s WASM=1 \
           -s EXPORTED_RUNTIME_METHODS='["ccall","cwrap","UTF8ToString","wasmMemory"]' \
           -s EXPORTED_FUNCTIONS='["_main","_mrbc_wasm_init","_mrbc_wasm_run","_mrbc_wasm_print_statistics","_malloc","_free"]' \
@@ -37,14 +46,6 @@ EMFLAGS = -s WASM=1 \
           -s ASYNCIFY_IMPORTS='["emscripten_sleep"]' \
           -s MODULARIZE=1 \
           -s EXPORT_NAME='createMrubycModule' \
-          # The following settings disable several Emscripten runtime safety checks
-          # to reduce code size and improve performance in production builds:
-          #   ASSERTIONS=0             : disables runtime assertions
-          #   DISABLE_EXCEPTION_CATCHING=1 : removes C++ exception handling support
-          #   STACK_OVERFLOW_CHECK=0  : disables stack overflow checks
-          # For development or when debugging runtime issues, consider building with:
-          #   -s ASSERTIONS=1 -s DISABLE_EXCEPTION_CATCHING=0 -s STACK_OVERFLOW_CHECK=1
-          # either by overriding EMFLAGS on the command line or in a separate debug Makefile.
           -s ASSERTIONS=0 \
           -s DISABLE_EXCEPTION_CATCHING=1 \
           -s STACK_OVERFLOW_CHECK=0 \

@@ -107,18 +107,7 @@ int mrbc_wasm_run(const uint8_t *bytecode, int size)
 EMSCRIPTEN_KEEPALIVE
 void mrbc_wasm_print_statistics(void)
 {
-  char buffer[512];
-  snprintf(buffer, sizeof(buffer),
-    "[VM Statistics]\n"
-    "  Memory Pool Size: %d bytes (%d KB)\n"
-    "  Initialized: %s\n"
-    "  Min Bytecode Size: %d bytes\n"
-    "  Max Bytecode Size: %d bytes (%d MB)\n",
-    MRBC_MEMORY_SIZE, MRBC_MEMORY_SIZE / 1024,
-    initialized ? "Yes" : "No",
-    MIN_BYTECODE_SIZE,
-    MAX_BYTECODE_SIZE, MAX_BYTECODE_SIZE / (1024 * 1024));
-  output_info(buffer);
+  mrbc_alloc_print_statistics();
 }
 
 int main(void)
