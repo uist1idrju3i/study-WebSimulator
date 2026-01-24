@@ -37,6 +37,14 @@ EMFLAGS = -s WASM=1 \
           -s ASYNCIFY_IMPORTS='["emscripten_sleep"]' \
           -s MODULARIZE=1 \
           -s EXPORT_NAME='createMrubycModule' \
+          # The following settings disable several Emscripten runtime safety checks
+          # to reduce code size and improve performance in production builds:
+          #   ASSERTIONS=0             : disables runtime assertions
+          #   DISABLE_EXCEPTION_CATCHING=1 : removes C++ exception handling support
+          #   STACK_OVERFLOW_CHECK=0  : disables stack overflow checks
+          # For development or when debugging runtime issues, consider building with:
+          #   -s ASSERTIONS=1 -s DISABLE_EXCEPTION_CATCHING=0 -s STACK_OVERFLOW_CHECK=1
+          # either by overriding EMFLAGS on the command line or in a separate debug Makefile.
           -s ASSERTIONS=0 \
           -s DISABLE_EXCEPTION_CATCHING=1 \
           -s STACK_OVERFLOW_CHECK=0 \
