@@ -39,7 +39,7 @@ CFLAGS = -O3 \
 # either by overriding EMFLAGS on the command line or in a separate debug Makefile.
 EMFLAGS = -s WASM=1 \
           -s EXPORTED_RUNTIME_METHODS='["ccall","cwrap","UTF8ToString","wasmMemory"]' \
-          -s EXPORTED_FUNCTIONS='["_main","_mrbc_wasm_init","_mrbc_wasm_run","_mrbc_wasm_print_statistics","_malloc","_free","_mrbc_wasm_define_class","_mrbc_wasm_define_method","_mrbc_wasm_get_class_object","_mrbc_wasm_register_method"]' \
+          -s EXPORTED_FUNCTIONS='["_main","_mrbc_wasm_init","_mrbc_wasm_run","_mrbc_wasm_print_statistics","_malloc","_free","_mrbc_wasm_define_class","_mrbc_wasm_define_method","_mrbc_wasm_get_class_object","_mrbc_wasm_register_method","_mrbc_wasm_define_pixels_class"]' \
           -s ALLOW_MEMORY_GROWTH=0 \
           -s INITIAL_MEMORY=16777216 \
           -s MAXIMUM_MEMORY=33554432 \

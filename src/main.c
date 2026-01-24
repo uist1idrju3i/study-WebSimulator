@@ -68,6 +68,43 @@ static void method_wrapper_0(mrbc_vm* vm, mrbc_value* v, int argc) {
   if (registered_methods[0]) registered_methods[0](vm, v, argc);
 }
 
+EM_JS(void, js_pixel_set, (int index, int red, int green, int blue), {
+  if (typeof window.pixelSet === 'function') {
+    window.pixelSet(index, red, green, blue);
+  }
+});
+
+EM_JS(void, js_pixel_update, (void), {
+  if (typeof window.pixelUpdate === 'function') {
+    window.pixelUpdate();
+  }
+});
+
+static void c_pixel_set(mrbc_vm* vm, mrbc_value* v, int argc) {
+  SET_FALSE_RETURN();
+  if (argc >= 4 && MRBC_ISNUMERIC(v[1]) && MRBC_ISNUMERIC(v[2]) &&
+      MRBC_ISNUMERIC(v[3]) && MRBC_ISNUMERIC(v[4])) {
+    int index = GET_INT_ARG(1);
+    int red = GET_INT_ARG(2);
+    int green = GET_INT_ARG(3);
+    int blue = GET_INT_ARG(4);
+    js_pixel_set(index, red, green, blue);
+    SET_TRUE_RETURN();
+  }
+}
+
+static void c_pixel_update(mrbc_vm* vm, mrbc_value* v, int argc) {
+  js_pixel_update();
+  SET_TRUE_RETURN();
+}
+
+EMSCRIPTEN_KEEPALIVE
+void mrbc_wasm_define_pixels_class(void) {
+  mrbc_class* pixels_class = mrbc_define_class(0, "PIXELS", mrbc_class_object);
+  mrbc_define_method(0, pixels_class, "set", c_pixel_set);
+  mrbc_define_method(0, pixels_class, "update", c_pixel_update);
+}
+
 static void output_error(const char *message)
 {
   hal_write(2, message, (int)strlen(message));

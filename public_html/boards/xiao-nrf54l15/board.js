@@ -6,25 +6,29 @@ export class BoardAPI {
 
   async initialize() {
     try {
-      const classObject = this.module._mrbc_wasm_get_class_object();
-      if (!classObject) {
-        throw new Error('Failed to get class object');
-      }
-
-      const pixelsClass = this.module.ccall(
-        'mrbc_wasm_define_class',
-        'number',
-        ['string', 'number'],
-        ['PIXELS', classObject]
-      );
-      if (!pixelsClass) {
-        throw new Error('Failed to define PIXELS class');
-      }
-
+      this.createDotElements();
       this.setupPixelMethods();
+      this.module._mrbc_wasm_define_pixels_class();
     } catch (error) {
       console.error('Board initialization failed:', error);
       throw error;
+    }
+  }
+
+  createDotElements() {
+    const container = document.getElementById('dot-container');
+    if (!container) {
+      throw new Error('dot-container element not found');
+    }
+
+    container.innerHTML = '';
+
+    for (let i = 0; i < this.maxLEDs; i++) {
+      const dot = document.createElement('div');
+      dot.id = String(i);
+      dot.className = 'dot';
+      dot.textContent = String(i);
+      container.appendChild(dot);
     }
   }
 
