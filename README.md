@@ -362,6 +362,157 @@ const heapU8 = new Uint8Array(mrubycModule.wasmMemory.buffer);
 heapU8.set(bytecode, bytecodePtr);
 ```
 
+## マイコンボード対応の追加方法
+
+### ディレクトリ構造
+
+新しいマイコンボードのサポートを追加するには、`public_html/boards/`ディレクトリに以下の構造でファイルを作成します：
+
+```
+public_html/boards/
+└── [board-name]/
+    ├── board.js      # ボードAPI定義（必須）
+    ├── ui.html       # ボードUI要素（必須）
+    ├── config.json   # ボード設定（推奨）
+    └── style.css     # ボード固有スタイル（オプション）
+```
+
+### セキュリティガイドライン
+
+**必須のセキュリティ対策：**
+
+1. **入力検証**: すべての外部入力（インデックス、色値等）を検証してください
+2. **範囲チェック**: 配列アクセスやLED番号は必ず範囲内かチェックしてください
+3. **XSS対策**: DOM操作時は`textContent`を使用し、`innerHTML`は避けてください
+4. **型チェック**: `Number.isInteger()`等で型を検証してください
+5. **エラーハンドリング**: try-catchで例外を適切に処理してください
+
+### board.jsの記述方法
+
+`board.js`ではボード固有のmruby/c APIを定義します。
+
+**必須エクスポート：**
+- `BoardAPI`クラス：ボードの機能を実装
+
+**実装例（セキュリティ対策付き）：**
+
+```javascript
+export class BoardAPI {
+  constructor(wasmModule) {
+    this.module = wasmModule;
+    this.maxDevices = 100; // デバイス数の上限を設定
+  }
+
+  async initialize() {
+    try {
+      // 1. mruby/cクラスの定義
+      const classObject = this.module._mrbc_wasm_get_class_object();
+      if (!classObject) {
+        throw new Error('Failed to get class object');
+      }
+      
+      const myClass = this.module.ccall(
+        'mrbc_wasm_define_class',
+        'number',
+        ['string', 'number'],
+        ['MyClass', classObject]
+      );
+      if (!myClass) {
+        throw new Error('Failed to define class');
+      }
+      
+      // 2. メソッドの定義
+      this.setupMethods();
+    } catch (error) {
+      console.error('Initialization failed:', error);
+      throw error;
+    }
+  }
+
+  // JavaScript側のメソッド実装（入力検証付き）
+  myMethod(arg1, arg2) {
+    // 入力検証
+    if (typeof arg1 !== 'number' || !Number.isFinite(arg1)) {
+      console.error('Invalid argument:', arg1);
+      return;
+    }
+    
+    // 処理実装
+    console.log('Method called:', arg1, arg2);
+  }
+}
+```
+
+### ui.htmlの記述方法
+
+ボード固有のUI要素を定義します。**XSS対策を必ず実施してください。**
+
+**セキュアな実装例：**
+
+```html
+<div class="board-ui">
+  <div class="board-title">My Board Name</div>
+  <div id="led-matrix"></div>
+</div>
+
+<script>
+  (function() {
+    'use strict';
+    
+    const matrix = document.getElementById('led-matrix');
+    const maxLEDs = 60; // 上限を設定
+    
+    for (let i = 0; i < maxLEDs; i++) {
+      const led = document.createElement('div');
+      led.id = String(i);
+      led.className = 'led';
+      led.textContent = String(i); // textContentを使用
+      matrix.appendChild(led);
+    }
+  })();
+</script>
+```
+
+### config.jsonの記述方法
+
+ボードのメタデータを定義します。
+
+```json
+{
+  "name": "Board Display Name",
+  "description": "Board description",
+  "vendor": "Manufacturer",
+  "width": 10,
+  "height": 6,
+  "features": ["LED", "Sensor"],
+  "version": "1.0.0"
+}
+```
+
+### mruby/c API定義の詳細
+
+**利用可能なWASM関数：**
+
+| 関数 | 説明 | 戻り値 |
+|------|------|--------|
+| `_mrbc_wasm_get_class_object()` | Object基底クラスを取得 | クラスポインタ（失敗時NULL） |
+| `_mrbc_wasm_define_class(name, super)` | クラスを定義 | クラスポインタ（失敗時NULL） |
+| `_mrbc_wasm_define_method(cls, name, func)` | メソッドを定義 | なし |
+| `_mrbc_wasm_register_method()` | メソッドを登録 | メソッドID（失敗時-1） |
+
+**セキュリティ上の注意事項：**
+- クラス名・メソッド名は64文字以内に制限されています
+- 登録可能なメソッド数は32個までです
+- すべての関数は入力検証を行い、不正な入力に対してはNULLまたは-1を返します
+- 戻り値は必ずチェックしてください
+
+### 新しいボードの追加手順
+
+1. `public_html/boards/[board-name]/`ディレクトリを作成
+2. `board.js`、`ui.html`、`config.json`を作成
+3. `public_html/app.js`の`ALLOWED_BOARDS`配列にボード名を追加
+4. `public_html/index.html`の`boardSelect`に新しいオプションを追加
+
 ## ライセンス
 
 このプロジェクトはBSD 3-Clause Licenseの下で配布されています。

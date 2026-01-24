@@ -20,6 +20,15 @@
   </div>
 
   <div class="container">
+    <div class="section-title">Board Selection</div>
+    <select id="boardSelect" class="board-selector">
+      <option value="xiao-nrf54l15">XIAO nRF54L15 (6x10 RGB Matrix)</option>
+    </select>
+  </div>
+
+  <div id="boardUIContainer"></div>
+
+  <div class="container">
     <div class="section-title">Run Sample Program</div>
     <div class="info-box">
       <h4>Sample Ruby Code (sample.rb)</h4>
@@ -133,10 +142,6 @@ end
     </div>
   </div>
   <div class="container">
-    <div>6x10 RGB MATRIX for XIAO</div>
-    <div id="dot-container"></div>
-</div>
-  <div class="container">
     <div class="section-title">Output Console</div>
     <div class="button-group">
       <button id="clearBtn" class="btn-secondary">Clear Output</button>
@@ -165,25 +170,5 @@ end
   <script src="mrubyc/mrubyc.js"></script>
   <script src="sample_bytecode.js"></script>
   <script src="app.js"></script>
-  <script>
-  const container = document.getElementById('dot-container');
-  const totalDots = 60;
-  for (let i = 0; i < totalDots; i++) {
-      const dot = document.createElement('div');
-      dot.id = i;
-      dot.className = 'dot';
-      dot.textContent = i;
-      container.appendChild(dot);
-  }
-  function changeColor(id, color) {
-      const targetDot = document.getElementById(id);
-      if (targetDot) {
-          targetDot.style.backgroundColor = color;
-          targetDot.style.color = (color === 'white' || color === '#ccc') ? '#666' : 'white';
-      } else {
-          console.error('指定されたIDのドットが見つかりません: ' + id);
-      }
-  }
-  </script>
 </body>
 </html>

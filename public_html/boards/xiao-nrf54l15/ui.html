@@ -1,0 +1,21 @@
+<div class="board-ui">
+  <div>6x10 RGB MATRIX for XIAO nRF54L15</div>
+  <div id="dot-container"></div>
+</div>
+
+<script>
+  (function() {
+    'use strict';
+    
+    const container = document.getElementById('dot-container');
+    const totalDots = 60;
+    
+    for (let i = 0; i < totalDots; i++) {
+      const dot = document.createElement('div');
+      dot.id = String(i);
+      dot.className = 'dot';
+      dot.textContent = String(i);
+      container.appendChild(dot);
+    }
+  })();
+</script>

@@ -17,7 +17,10 @@ CFLAGS = -O3 \
          -I$(HAL_DIR) \
          -DMRBC_SCHEDULER_EXIT=1 -DMRBC_USE_FLOAT=1 -DMRBC_USE_MATH=1 -DMAX_VM_COUNT=5 \
          -DMRBC_DEBUG \
-         -DNDEBUG
+         -DNDEBUG \
+         -D_FORTIFY_SOURCE=2 \
+         -fstack-protector-strong \
+         -Wformat -Wformat-security
 
 # Emscripten specific flags
 # ASYNCIFY_STACK_SIZE is increased from the default 4096 to 16384 bytes
@@ -36,8 +39,8 @@ CFLAGS = -O3 \
 # either by overriding EMFLAGS on the command line or in a separate debug Makefile.
 EMFLAGS = -s WASM=1 \
           -s EXPORTED_RUNTIME_METHODS='["ccall","cwrap","UTF8ToString","wasmMemory"]' \
-          -s EXPORTED_FUNCTIONS='["_main","_mrbc_wasm_init","_mrbc_wasm_run","_mrbc_wasm_print_statistics","_malloc","_free"]' \
-          -s ALLOW_MEMORY_GROWTH=1 \
+          -s EXPORTED_FUNCTIONS='["_main","_mrbc_wasm_init","_mrbc_wasm_run","_mrbc_wasm_print_statistics","_malloc","_free","_mrbc_wasm_define_class","_mrbc_wasm_define_method","_mrbc_wasm_get_class_object","_mrbc_wasm_register_method"]' \
+          -s ALLOW_MEMORY_GROWTH=0 \
           -s INITIAL_MEMORY=16777216 \
           -s MAXIMUM_MEMORY=33554432 \
           -s ASYNCIFY \
@@ -46,9 +49,9 @@ EMFLAGS = -s WASM=1 \
           -s ASYNCIFY_IMPORTS='["emscripten_sleep"]' \
           -s MODULARIZE=1 \
           -s EXPORT_NAME='createMrubycModule' \
-          -s ASSERTIONS=0 \
+          -s ASSERTIONS=1 \
           -s DISABLE_EXCEPTION_CATCHING=1 \
-          -s STACK_OVERFLOW_CHECK=0 \
+          -s STACK_OVERFLOW_CHECK=2 \
           -s FILESYSTEM=0 \
           -s ENVIRONMENT='web' \
           --no-entry
@@ -79,8 +82,7 @@ MRUBYC_SRCS = $(MRUBYC_SRC_DIR)/alloc.c \
 HAL_SRCS = $(HAL_DIR)/hal.c
 
 # Main source files
-MAIN_SRCS = $(SRC_DIR)/main.c \
-             $(SRC_DIR)/api/pixels.c
+MAIN_SRCS = $(SRC_DIR)/main.c
 
 # All source files
 SRCS = $(MRUBYC_SRCS) $(HAL_SRCS) $(MAIN_SRCS)

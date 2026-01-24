@@ -1,0 +1,8 @@
+{
+  "name": "XIAO nRF54L15",
+  "description": "6x10 RGB Matrix LED Board",
+  "width": 10,
+  "height": 6,
+  "ledCount": 60,
+  "version": "1.0.0"
+}

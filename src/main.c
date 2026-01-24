@@ -10,7 +10,6 @@
 #include <emscripten.h>
 #include "mrubyc.h"
 #include "hal.h"
-#include "api/pixels.h"
 
 #if !defined(MRBC_MEMORY_SIZE)
 #define MRBC_MEMORY_SIZE (1024 * 40)
@@ -19,8 +18,55 @@
 #define MIN_BYTECODE_SIZE 8
 #define MAX_BYTECODE_SIZE (1024 * 1024)
 
+#define MAX_REGISTERED_METHODS 32
+#define MAX_CLASS_NAME_LENGTH 64
+#define MAX_METHOD_NAME_LENGTH 64
+
 static uint8_t memory_pool[MRBC_MEMORY_SIZE];
 static int initialized = 0;
+
+static int validate_string(const char* str, size_t max_length) {
+  if (!str) return 0;
+  size_t len = strnlen(str, max_length + 1);
+  return len > 0 && len <= max_length;
+}
+
+EMSCRIPTEN_KEEPALIVE
+void* mrbc_wasm_define_class(const char* name, void* super_class) {
+  if (!validate_string(name, MAX_CLASS_NAME_LENGTH)) {
+    return NULL;
+  }
+  return mrbc_define_class(0, name, super_class ? super_class : mrbc_class_object);
+}
+
+EMSCRIPTEN_KEEPALIVE
+void mrbc_wasm_define_method(void* class_ptr, const char* name, mrbc_func_t func_ptr) {
+  if (!class_ptr || !validate_string(name, MAX_METHOD_NAME_LENGTH) || !func_ptr) {
+    return;
+  }
+  mrbc_define_method(0, (mrbc_class*)class_ptr, name, func_ptr);
+}
+
+EMSCRIPTEN_KEEPALIVE
+void* mrbc_wasm_get_class_object(void) {
+  return mrbc_class_object;
+}
+
+typedef void (*js_method_func)(mrbc_vm*, mrbc_value*, int);
+static js_method_func registered_methods[MAX_REGISTERED_METHODS];
+static int method_count = 0;
+
+EMSCRIPTEN_KEEPALIVE
+int mrbc_wasm_register_method(void) {
+  if (method_count >= MAX_REGISTERED_METHODS) {
+    return -1;
+  }
+  return method_count++;
+}
+
+static void method_wrapper_0(mrbc_vm* vm, mrbc_value* v, int argc) {
+  if (registered_methods[0]) registered_methods[0](vm, v, argc);
+}
 
 static void output_error(const char *message)
 {
@@ -76,8 +122,6 @@ int mrbc_wasm_run(const uint8_t *bytecode, int size)
   if (!initialized) {
     mrbc_wasm_init();
   }
-
-  api_pixels_define();
 
   mrbc_tcb *tcb = mrbc_create_task(bytecode, NULL);
   if (tcb == NULL) {

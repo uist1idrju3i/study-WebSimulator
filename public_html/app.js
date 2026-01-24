@@ -4,6 +4,8 @@
 
 let mrubycModule = null;
 let isRunning = false;
+let currentBoard = null;
+const ALLOWED_BOARDS = ['xiao-nrf54l15'];
 
 const statusIndicator = document.getElementById('statusIndicator');
 const statusText = document.getElementById('statusText');
@@ -14,6 +16,8 @@ const runCustomBtn = document.getElementById('runCustomBtn');
 const clearBtn = document.getElementById('clearBtn');
 const showStatsBtn = document.getElementById('showStatsBtn');
 const bytecodeFile = document.getElementById('bytecodeFile');
+const boardSelect = document.getElementById('boardSelect');
+const boardUIContainer = document.getElementById('boardUIContainer');
 
 let customBytecode = null;
 
@@ -43,6 +47,37 @@ window.mrubycError = function(text) {
   appendOutput(text, 'error');
 };
 
+async function loadBoard(boardName) {
+  if (!ALLOWED_BOARDS.includes(boardName)) {
+    console.error('Invalid board name:', boardName);
+    return;
+  }
+
+  if (boardName.includes('..') || boardName.includes('/') || boardName.includes('\\')) {
+    console.error('Invalid board name format:', boardName);
+    return;
+  }
+
+  try {
+    const boardModule = await import(`./boards/${boardName}/board.js`);
+    currentBoard = new boardModule.BoardAPI(mrubycModule);
+
+    const uiResponse = await fetch(`./boards/${boardName}/ui.html`);
+    if (!uiResponse.ok) {
+      throw new Error(`Failed to load UI: ${uiResponse.status}`);
+    }
+    const uiHTML = await uiResponse.text();
+
+    boardUIContainer.innerHTML = uiHTML;
+
+    await currentBoard.initialize();
+    appendOutput('[INFO] Board loaded: ' + boardName + '\n', 'info');
+  } catch (error) {
+    console.error('Failed to load board:', error);
+    appendOutput('[ERROR] Failed to load board: ' + error.message + '\n', 'error');
+  }
+}
+
 async function initModule() {
   try {
     mrubycModule = await createMrubycModule();
@@ -55,6 +90,8 @@ async function initModule() {
     runSampleBtn.disabled = false;
     
     appendOutput('[INFO] mruby/c WebAssembly module loaded successfully.\n', 'info');
+
+    await loadBoard('xiao-nrf54l15');
   } catch (error) {
     setStatus('error', 'Failed to load module: ' + error.message);
     appendOutput('[ERROR] Failed to load mruby/c module: ' + error.message + '\n', 'error');
@@ -166,6 +203,10 @@ showStatsBtn.addEventListener('click', function() {
   } else {
     appendOutput('[ERROR] mruby/c module not loaded.\n', 'error');
   }
+});
+
+boardSelect.addEventListener('change', async function(e) {
+  await loadBoard(e.target.value);
 });
 
 initModule();
