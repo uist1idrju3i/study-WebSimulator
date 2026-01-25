@@ -86,10 +86,6 @@ int mrbc_wasm_run(const uint8_t *bytecode, int size)
 
   mrbc_tcb *tcb = mrbc_create_task(bytecode, NULL);
   
-  // Call JavaScript callback to define board API after bytecode is loaded
-  // This ensures symbol IDs match between method definitions and bytecode
-  js_on_task_created();
-  
   if (tcb == NULL) {
     output_error("[ERROR] Failed to create task.\n");
     output_error("  Possible causes:\n");
@@ -104,6 +100,10 @@ int mrbc_wasm_run(const uint8_t *bytecode, int size)
     mrbc_wasm_init();
     return -5;
   }
+
+  // Call JavaScript callback to define board API after bytecode is loaded
+  // This ensures symbol IDs match between method definitions and bytecode
+  js_on_task_created();
 
   int ret = mrbc_run();
   mrbc_cleanup();

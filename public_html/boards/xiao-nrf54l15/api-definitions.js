@@ -15,6 +15,18 @@
 let registeredCallbacks = [];
 
 /**
+ * Pointer to the current PIXELS instance for memory management
+ * @type {number|null}
+ */
+let currentPixelsInstance = null;
+
+/**
+ * Reference to the current API wrapper for cleanup
+ * @type {MrubycWasmAPI|null}
+ */
+let currentApi = null;
+
+/**
  * mruby/c WASM API wrapper class
  * Provides a clean JavaScript interface to the mruby/c WASM functions.
  * This abstraction layer ensures compatibility with future mruby/c versions
@@ -192,6 +204,13 @@ function definePixelsAPI(mrubycModule) {
   // Create API wrapper instance
   const api = new MrubycWasmAPI(mrubycModule);
   
+  // Free the previous PIXELS instance to prevent memory leaks
+  if (currentPixelsInstance && currentApi) {
+    currentApi.freeInstance(currentPixelsInstance);
+    currentPixelsInstance = null;
+  }
+  currentApi = api;
+  
   // Save old callbacks for cleanup AFTER new ones are registered
   // This ensures the PIXELS class always has valid function pointers
   const oldCallbacks = [...registeredCallbacks];
@@ -241,6 +260,8 @@ function definePixelsAPI(mrubycModule) {
   const pixelsInstance = api.instanceNew(pixelsClass);
   
   if (pixelsInstance) {
+    // Track the instance for memory management
+    currentPixelsInstance = pixelsInstance;
     // Set it as a global constant PIXELS
     api.setGlobalConst('PIXELS', pixelsInstance);
   } else {
@@ -259,16 +280,24 @@ function definePixelsAPI(mrubycModule) {
 }
 
 /**
- * Cleanup registered callbacks to prevent memory leaks
+ * Cleanup registered callbacks and instance to prevent memory leaks
  * Should be called when switching boards
  * @param {Object} mrubycModule - The mruby/c WASM module instance
  */
 function cleanupPixelsAPI(mrubycModule) {
+  // Free the PIXELS instance
+  if (currentPixelsInstance && currentApi) {
+    currentApi.freeInstance(currentPixelsInstance);
+    currentPixelsInstance = null;
+  }
+  currentApi = null;
+  
+  // Remove registered callbacks
   for (const callback of registeredCallbacks) {
     try {
       mrubycModule.removeFunction(callback);
     } catch (e) {
-      console.warn('Failed to remove callback:', e);
+      // Ignore cleanup errors
     }
   }
   registeredCallbacks = [];

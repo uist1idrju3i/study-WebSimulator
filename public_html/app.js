@@ -64,7 +64,6 @@ async function initModule() {
     
     // Initialize board loader
     boardLoader = new BoardLoader();
-    boardLoader.setModule(mrubycModule);
     
     // Populate board selector
     const boards = boardLoader.getAvailableBoards();
