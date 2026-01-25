@@ -148,6 +148,37 @@ class MrubycWasmAPI {
   removeFunction(funcPtr) {
     this.module.removeFunction(funcPtr);
   }
+
+  /**
+   * Create a new instance of a class
+   * @param {number} cls - Pointer to the class
+   * @returns {number} Pointer to the instance
+   */
+  instanceNew(cls) {
+    return this.module._mrbc_wasm_instance_new(cls);
+  }
+
+  /**
+   * Set a global constant
+   * @param {string} name - Constant name
+   * @param {number} value - Pointer to the value
+   */
+  setGlobalConst(name, value) {
+    this.module.ccall(
+      'mrbc_wasm_set_global_const',
+      null,
+      ['string', 'number'],
+      [name, value]
+    );
+  }
+
+  /**
+   * Free an instance
+   * @param {number} instance - Pointer to the instance
+   */
+  freeInstance(instance) {
+    this.module._mrbc_wasm_free_instance(instance);
+  }
 }
 
 /**
@@ -169,9 +200,9 @@ function definePixelsAPI(mrubycModule) {
   // Get the Object class as the super class
   const classObject = api.getClassObject();
   
-  // Define the PIXELS class (or redefine if it already exists)
+  // Define the Pixels class (or redefine if it already exists)
   // mruby/c will update the existing class if it already exists
-  const pixelsClass = api.defineClass('PIXELS', classObject);
+  const pixelsClass = api.defineClass('Pixels', classObject);
   
   // Define the 'set' method (PIXELS.set(index, r, g, b))
   // Signature: void func(mrb_vm *vm, mrb_value *v, int argc)
@@ -206,13 +237,23 @@ function definePixelsAPI(mrubycModule) {
   registeredCallbacks.push(updateCallback);
   api.defineMethod(pixelsClass, 'update', updateCallback);
   
+  // Create an instance of the Pixels class
+  const pixelsInstance = api.instanceNew(pixelsClass);
+  
+  if (pixelsInstance) {
+    // Set it as a global constant PIXELS
+    api.setGlobalConst('PIXELS', pixelsInstance);
+  } else {
+    console.error('definePixelsAPI: Failed to create Pixels instance');
+  }
+  
   // NOW it's safe to remove old callbacks since the PIXELS class
   // methods now point to the new callbacks
   for (const callback of oldCallbacks) {
     try {
       api.removeFunction(callback);
     } catch (e) {
-      console.warn('Failed to remove old callback:', e);
+      // Ignore cleanup errors
     }
   }
 }

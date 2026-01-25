@@ -117,10 +117,9 @@ class BoardLoader {
         window.createBoardUI(uiContainer, this.currentBoard);
       }
 
-      // Define the API if module is available
-      if (this.mrubycModule && typeof window.definePixelsAPI === 'function') {
-        window.definePixelsAPI(this.mrubycModule);
-      }
+      // Note: definePixelsAPI is now called from mrubycOnTaskCreated callback
+      // after bytecode is loaded but before execution. This ensures symbol IDs
+      // match between method definitions and bytecode.
 
       return true;
     } catch (error) {

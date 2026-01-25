@@ -11,6 +11,14 @@
 #include "mrubyc.h"
 #include "hal.h"
 
+// Callback for defining board API after bytecode is loaded but before execution
+// This ensures symbol IDs match between method definitions and bytecode
+EM_JS(void, js_on_task_created, (), {
+  if (typeof window !== 'undefined' && window.mrubycOnTaskCreated) {
+    window.mrubycOnTaskCreated();
+  }
+});
+
 #if !defined(MRBC_MEMORY_SIZE)
 #define MRBC_MEMORY_SIZE (1024 * 40)
 #endif
@@ -77,6 +85,11 @@ int mrbc_wasm_run(const uint8_t *bytecode, int size)
   }
 
   mrbc_tcb *tcb = mrbc_create_task(bytecode, NULL);
+  
+  // Call JavaScript callback to define board API after bytecode is loaded
+  // This ensures symbol IDs match between method definitions and bytecode
+  js_on_task_created();
+  
   if (tcb == NULL) {
     output_error("[ERROR] Failed to create task.\n");
     output_error("  Possible causes:\n");
@@ -258,4 +271,65 @@ void mrbc_wasm_set_return_float(void* v, double val)
   mrbc_decref(values);
   values[0].tt = MRBC_TT_FLOAT;
   values[0].d = val;
+}
+
+/**
+ * @brief Create a new instance of a class
+ * @param cls Pointer to the class
+ * @return Pointer to the newly created instance (mrbc_value*)
+ */
+EMSCRIPTEN_KEEPALIVE
+void* mrbc_wasm_instance_new(void* cls)
+{
+  if (!initialized) {
+    mrbc_wasm_init();
+  }
+  
+  // Allocate memory for the mrbc_value
+  mrbc_value* instance = (mrbc_value*)malloc(sizeof(mrbc_value));
+  if (!instance) {
+    return NULL;
+  }
+  
+  // Create instance using mruby/c API
+  // mrbc_instance_new returns mrbc_value by value, so we copy it
+  *instance = mrbc_instance_new(0, (mrbc_class*)cls, 0);
+  
+  // Check if instance creation failed
+  if (instance->instance == NULL) {
+    free(instance);
+    return NULL;
+  }
+  
+  return (void*)instance;
+}
+
+/**
+ * @brief Set a global constant
+ * @param name Constant name
+ * @param value Pointer to the value (mrbc_value*)
+ */
+EMSCRIPTEN_KEEPALIVE
+void mrbc_wasm_set_global_const(const char* name, void* value)
+{
+  if (!initialized) {
+    mrbc_wasm_init();
+  }
+  
+  mrbc_value* val = (mrbc_value*)value;
+  mrbc_sym sym_id = mrbc_str_to_symid(name);
+  
+  mrbc_set_const(sym_id, val);
+}
+
+/**
+ * @brief Free an instance created by mrbc_wasm_instance_new
+ * @param instance Pointer to the instance (mrbc_value*)
+ */
+EMSCRIPTEN_KEEPALIVE
+void mrbc_wasm_free_instance(void* instance)
+{
+  if (instance) {
+    free(instance);
+  }
 }
