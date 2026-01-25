@@ -35,8 +35,9 @@ CFLAGS = -O3 \
 #   -s ASSERTIONS=1 -s DISABLE_EXCEPTION_CATCHING=0 -s STACK_OVERFLOW_CHECK=1
 # either by overriding EMFLAGS on the command line or in a separate debug Makefile.
 EMFLAGS = -s WASM=1 \
-          -s EXPORTED_RUNTIME_METHODS='["ccall","cwrap","UTF8ToString","wasmMemory"]' \
-          -s EXPORTED_FUNCTIONS='["_main","_mrbc_wasm_init","_mrbc_wasm_run","_mrbc_wasm_print_statistics","_malloc","_free"]' \
+          -s EXPORTED_RUNTIME_METHODS='["ccall","cwrap","UTF8ToString","wasmMemory","addFunction","removeFunction"]' \
+          -s EXPORTED_FUNCTIONS='["_main","_mrbc_wasm_init","_mrbc_wasm_run","_mrbc_wasm_print_statistics","_malloc","_free","_mrbc_wasm_get_class_object","_mrbc_wasm_define_class","_mrbc_wasm_define_method","_mrbc_wasm_get_int_arg","_mrbc_wasm_get_float_arg","_mrbc_wasm_is_numeric_arg","_mrbc_wasm_set_return_bool","_mrbc_wasm_set_return_nil","_mrbc_wasm_set_return_int","_mrbc_wasm_set_return_float"]' \
+          -s ALLOW_TABLE_GROWTH=1 \
           -s ALLOW_MEMORY_GROWTH=1 \
           -s INITIAL_MEMORY=16777216 \
           -s MAXIMUM_MEMORY=33554432 \
@@ -79,8 +80,7 @@ MRUBYC_SRCS = $(MRUBYC_SRC_DIR)/alloc.c \
 HAL_SRCS = $(HAL_DIR)/hal.c
 
 # Main source files
-MAIN_SRCS = $(SRC_DIR)/main.c \
-             $(SRC_DIR)/api/pixels.c
+MAIN_SRCS = $(SRC_DIR)/main.c
 
 # All source files
 SRCS = $(MRUBYC_SRCS) $(HAL_SRCS) $(MAIN_SRCS)

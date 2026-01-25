@@ -132,10 +132,20 @@ end
       <button id="runCustomBtn" class="btn-primary" disabled>Run Custom Bytecode</button>
     </div>
   </div>
+
   <div class="container">
-    <div>6x10 RGB MATRIX for XIAO</div>
-    <div id="dot-container"></div>
-</div>
+    <div class="section-title">Board Selection</div>
+    <div class="file-input-wrapper">
+      <label for="boardSelector">Select target board:</label>
+      <select id="boardSelector">
+        <option value="">Select Board...</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="container" id="boardUIContainer">
+    <!-- Board-specific UI will be dynamically generated here -->
+  </div>
   <div class="container">
     <div class="section-title">Output Console</div>
     <div class="button-group">
@@ -164,26 +174,7 @@ end
 
   <script src="mrubyc/mrubyc.js"></script>
   <script src="sample_bytecode.js"></script>
+  <script src="lib/board-loader.js"></script>
   <script src="app.js"></script>
-  <script>
-  const container = document.getElementById('dot-container');
-  const totalDots = 60;
-  for (let i = 0; i < totalDots; i++) {
-      const dot = document.createElement('div');
-      dot.id = i;
-      dot.className = 'dot';
-      dot.textContent = i;
-      container.appendChild(dot);
-  }
-  function changeColor(id, color) {
-      const targetDot = document.getElementById(id);
-      if (targetDot) {
-          targetDot.style.backgroundColor = color;
-          targetDot.style.color = (color === 'white' || color === '#ccc') ? '#666' : 'white';
-      } else {
-          console.error('指定されたIDのドットが見つかりません: ' + id);
-      }
-  }
-  </script>
 </body>
 </html>

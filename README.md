@@ -362,6 +362,255 @@ const heapU8 = new Uint8Array(mrubycModule.wasmMemory.buffer);
 heapU8.set(bytecode, bytecodePtr);
 ```
 
+## ボード設定の作成方法
+
+このプロジェクトでは、Cコードを再コンパイルすることなく、JavaScript側だけで新しいマイコンボードのサポートを追加できます。
+
+### ディレクトリ構造
+
+新しいボードを追加するには、`public_html/boards/` ディレクトリ内に以下の構造でファイルを作成します：
+
+```
+public_html/boards/
+└── your-board-id/
+    ├── board-config.js      # ボード固有の設定
+    ├── ui-components.js     # UI生成コード
+    └── api-definitions.js   # mruby/c APIの定義
+```
+
+### 必要なファイル
+
+#### 1. board-config.js
+
+ボードの基本設定を定義します：
+
+```javascript
+const BOARD_CONFIG = {
+  name: "Your Board Name",
+  id: "your-board-id",
+  description: "Description of your board",
+  
+  ui: {
+    matrixWidth: 10,    // LEDマトリックスの幅
+    matrixHeight: 6,    // LEDマトリックスの高さ
+    totalPixels: 60     // 総LED数
+  }
+};
+
+if (typeof window !== 'undefined') {
+  window.BOARD_CONFIG = BOARD_CONFIG;
+}
+```
+
+#### 2. api-definitions.js
+
+mruby/c用のクラスとメソッドを定義します。`MrubycWasmAPI`クラスを使用してWASM APIにアクセスします：
+
+```javascript
+let registeredCallbacks = [];
+
+class MrubycWasmAPI {
+  constructor(module) {
+    this.module = module;
+  }
+
+  // クラス定義
+  getClassObject() {
+    return this.module._mrbc_wasm_get_class_object();
+  }
+
+  defineClass(name, superClass) {
+    return this.module.ccall(
+      'mrbc_wasm_define_class', 'number',
+      ['string', 'number'], [name, superClass]
+    );
+  }
+
+  defineMethod(cls, name, func) {
+    this.module.ccall(
+      'mrbc_wasm_define_method', null,
+      ['number', 'string', 'number'], [cls, name, func]
+    );
+  }
+
+  // 引数取得メソッド
+  getIntArg(vPtr, index) {
+    return this.module._mrbc_wasm_get_int_arg(vPtr, index);
+  }
+
+  getFloatArg(vPtr, index) {
+    return this.module._mrbc_wasm_get_float_arg(vPtr, index);
+  }
+
+  isNumericArg(vPtr, index) {
+    return this.module._mrbc_wasm_is_numeric_arg(vPtr, index) !== 0;
+  }
+
+  // 戻り値設定メソッド
+  setReturnBool(vPtr, val) {
+    this.module._mrbc_wasm_set_return_bool(vPtr, val ? 1 : 0);
+  }
+
+  setReturnNil(vPtr) {
+    this.module._mrbc_wasm_set_return_nil(vPtr);
+  }
+
+  setReturnInt(vPtr, val) {
+    this.module._mrbc_wasm_set_return_int(vPtr, val);
+  }
+
+  setReturnFloat(vPtr, val) {
+    this.module._mrbc_wasm_set_return_float(vPtr, val);
+  }
+
+  // コールバック関数の登録
+  addFunction(func, signature) {
+    return this.module.addFunction(func, signature);
+  }
+
+  removeFunction(funcPtr) {
+    this.module.removeFunction(funcPtr);
+  }
+}
+
+function defineYourAPI(mrubycModule) {
+  const api = new MrubycWasmAPI(mrubycModule);
+  const classObject = api.getClassObject();
+  
+  // クラスの定義
+  const yourClass = api.defineClass('YOUR_CLASS', classObject);
+  
+  // メソッドの定義
+  // シグネチャ: void func(mrb_vm *vm, mrb_value *v, int argc)
+  const methodCallback = api.addFunction((vmPtr, vPtr, argc) => {
+    // 引数の取得
+    if (api.isNumericArg(vPtr, 1)) {
+      const arg1 = api.getIntArg(vPtr, 1);
+      // 処理...
+      api.setReturnBool(vPtr, true);
+    } else {
+      api.setReturnBool(vPtr, false);
+    }
+  }, 'viii');
+  
+  registeredCallbacks.push(methodCallback);
+  api.defineMethod(yourClass, 'method_name', methodCallback);
+}
+
+function cleanupYourAPI(mrubycModule) {
+  const api = new MrubycWasmAPI(mrubycModule);
+  for (const callback of registeredCallbacks) {
+    try {
+      api.removeFunction(callback);
+    } catch (e) {
+      console.warn('Failed to remove callback:', e);
+    }
+  }
+  registeredCallbacks = [];
+}
+
+if (typeof window !== 'undefined') {
+  window.defineYourAPI = defineYourAPI;
+  window.cleanupYourAPI = cleanupYourAPI;
+}
+```
+
+#### 3. ui-components.js
+
+ボード固有のUI要素を生成します：
+
+```javascript
+function createBoardUI(container, config) {
+  container.innerHTML = '';
+  
+  const title = document.createElement('div');
+  title.textContent = `${config.ui.matrixWidth}x${config.ui.matrixHeight} RGB MATRIX for ${config.name}`;
+  container.appendChild(title);
+  
+  const dotContainer = document.createElement('div');
+  dotContainer.id = 'dot-container';
+  container.appendChild(dotContainer);
+  
+  for (let i = 0; i < config.ui.totalPixels; i++) {
+    const dot = document.createElement('div');
+    dot.id = i;
+    dot.className = 'dot';
+    dot.textContent = i;
+    dotContainer.appendChild(dot);
+  }
+}
+
+function setPixelColor(id, red, green, blue) {
+  const targetDot = document.getElementById(id);
+  if (targetDot) {
+    targetDot.style.backgroundColor = `rgb(${red}, ${green}, ${blue})`;
+    const brightness = red + green + blue;
+    targetDot.style.color = brightness > 128 * 3 ? '#666' : 'white';
+  }
+}
+
+function cleanupBoardUI(container) {
+  container.innerHTML = '';
+}
+
+if (typeof window !== 'undefined') {
+  window.createBoardUI = createBoardUI;
+  window.setPixelColor = setPixelColor;
+  window.cleanupBoardUI = cleanupBoardUI;
+}
+```
+
+### 新しいボードの登録
+
+`public_html/lib/board-loader.js` の `availableBoards` 配列に新しいボードを追加します：
+
+```javascript
+this.availableBoards = [
+  { id: 'xiao-nrf54l15', name: 'XIAO nRF54L15', path: 'boards/xiao-nrf54l15' },
+  { id: 'your-board-id', name: 'Your Board Name', path: 'boards/your-board-id' }
+];
+```
+
+または、実行時に動的に登録することもできます：
+
+```javascript
+boardLoader.registerBoard({
+  id: 'your-board-id',
+  name: 'Your Board Name',
+  path: 'boards/your-board-id'
+});
+```
+
+### WASM API リファレンス
+
+| C関数 | JavaScript API | 説明 |
+|-------|---------------|------|
+| `mrbc_wasm_get_class_object()` | `api.getClassObject()` | Objectクラスのポインタを取得 |
+| `mrbc_wasm_define_class()` | `api.defineClass(name, super)` | 新しいクラスを定義 |
+| `mrbc_wasm_define_method()` | `api.defineMethod(cls, name, func)` | メソッドを定義 |
+| `mrbc_wasm_get_int_arg()` | `api.getIntArg(vPtr, index)` | 整数引数を取得 |
+| `mrbc_wasm_get_float_arg()` | `api.getFloatArg(vPtr, index)` | 浮動小数点引数を取得 |
+| `mrbc_wasm_is_numeric_arg()` | `api.isNumericArg(vPtr, index)` | 引数が数値かチェック |
+| `mrbc_wasm_set_return_bool()` | `api.setReturnBool(vPtr, val)` | 真偽値を返す |
+| `mrbc_wasm_set_return_nil()` | `api.setReturnNil(vPtr)` | nilを返す |
+| `mrbc_wasm_set_return_int()` | `api.setReturnInt(vPtr, val)` | 整数を返す |
+| `mrbc_wasm_set_return_float()` | `api.setReturnFloat(vPtr, val)` | 浮動小数点数を返す |
+
+### デバッグ方法
+
+1. ブラウザの開発者ツールを開く（F12）
+2. コンソールタブでエラーメッセージを確認
+3. `console.log()` を使用してデバッグ情報を出力
+4. ネットワークタブでスクリプトの読み込みを確認
+
+### 注意事項
+
+1. **メモリ管理**: `addFunction()` で作成したコールバック関数は、ボード切り替え時に `removeFunction()` で適切に解放してください。
+
+2. **エラーハンドリング**: JavaScript-WASM間の呼び出しは型安全ではないため、適切なバリデーションとエラーハンドリングを実装してください。
+
+3. **コールバック署名**: mruby/cメソッドのコールバック関数は `'viii'` シグネチャ（void, int, int, int）を使用します。
+
 ## ライセンス
 
 このプロジェクトはBSD 3-Clause Licenseの下で配布されています。

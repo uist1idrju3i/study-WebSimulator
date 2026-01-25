@@ -4,6 +4,7 @@
 
 let mrubycModule = null;
 let isRunning = false;
+let boardLoader = null;
 
 const statusIndicator = document.getElementById('statusIndicator');
 const statusText = document.getElementById('statusText');
@@ -14,6 +15,8 @@ const runCustomBtn = document.getElementById('runCustomBtn');
 const clearBtn = document.getElementById('clearBtn');
 const showStatsBtn = document.getElementById('showStatsBtn');
 const bytecodeFile = document.getElementById('bytecodeFile');
+const boardSelector = document.getElementById('boardSelector');
+const boardUIContainer = document.getElementById('boardUIContainer');
 
 let customBytecode = null;
 
@@ -50,6 +53,26 @@ async function initModule() {
     mrubycModule._mrbc_wasm_init();
     
     versionInfo.textContent = 'mruby/c module initialized';
+    
+    // Initialize board loader
+    boardLoader = new BoardLoader();
+    boardLoader.setModule(mrubycModule);
+    
+    // Populate board selector
+    const boards = boardLoader.getAvailableBoards();
+    boards.forEach(board => {
+      const option = document.createElement('option');
+      option.value = board.id;
+      option.textContent = board.name;
+      boardSelector.appendChild(option);
+    });
+    
+    // Auto-select first board if available
+    if (boards.length > 0) {
+      boardSelector.value = boards[0].id;
+      await boardLoader.switchBoard(boards[0].id, boardUIContainer);
+      appendOutput('[INFO] Board loaded: ' + boards[0].name + '\n', 'info');
+    }
     
     setStatus('ready', 'mruby/c module ready');
     runSampleBtn.disabled = false;
@@ -157,6 +180,28 @@ runCustomBtn.addEventListener('click', function() {
 });
 
 clearBtn.addEventListener('click', clearOutput);
+
+// Board selector change handler
+boardSelector.addEventListener('change', async function(e) {
+  const boardId = e.target.value;
+  if (!boardId) {
+    // Clear board UI if no board selected
+    if (boardLoader) {
+      boardLoader.cleanupBoard(boardUIContainer);
+    }
+    return;
+  }
+  
+  if (boardLoader && mrubycModule) {
+    const success = await boardLoader.switchBoard(boardId, boardUIContainer);
+    if (success) {
+      const board = boardLoader.getCurrentBoard();
+      appendOutput('[INFO] Board switched to: ' + board.name + '\n', 'info');
+    } else {
+      appendOutput('[ERROR] Failed to switch board.\n', 'error');
+    }
+  }
+});
 
 showStatsBtn.addEventListener('click', function() {
   if (mrubycModule) {

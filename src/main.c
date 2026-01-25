@@ -10,7 +10,6 @@
 #include <emscripten.h>
 #include "mrubyc.h"
 #include "hal.h"
-#include "api/pixels.h"
 
 #if !defined(MRBC_MEMORY_SIZE)
 #define MRBC_MEMORY_SIZE (1024 * 40)
@@ -77,8 +76,6 @@ int mrbc_wasm_run(const uint8_t *bytecode, int size)
     mrbc_wasm_init();
   }
 
-  api_pixels_define();
-
   mrbc_tcb *tcb = mrbc_create_task(bytecode, NULL);
   if (tcb == NULL) {
     output_error("[ERROR] Failed to create task.\n");
@@ -114,4 +111,151 @@ int main(void)
 {
   mrbc_wasm_init();
   return 0;
+}
+
+/*
+ * WASM API wrapper functions for JavaScript integration
+ * These functions expose mruby/c internal APIs to JavaScript,
+ * allowing dynamic class and method definition from the browser.
+ */
+
+/**
+ * @brief Get pointer to mrbc_class_object (Object class)
+ * @return Pointer to the Object class
+ */
+EMSCRIPTEN_KEEPALIVE
+void* mrbc_wasm_get_class_object(void)
+{
+  return (void*)mrbc_class_object;
+}
+
+/**
+ * @brief Define a new class in mruby/c
+ * @param name Class name
+ * @param super Pointer to super class (use mrbc_wasm_get_class_object for Object)
+ * @return Pointer to the newly created class
+ */
+EMSCRIPTEN_KEEPALIVE
+void* mrbc_wasm_define_class(const char* name, void* super)
+{
+  if (!initialized) {
+    mrbc_wasm_init();
+  }
+  return (void*)mrbc_define_class(0, name, (mrbc_class*)super);
+}
+
+/**
+ * @brief Define a method for a class
+ * @param cls Pointer to the class
+ * @param name Method name
+ * @param func Pointer to the C function (mrbc_func_t signature)
+ */
+EMSCRIPTEN_KEEPALIVE
+void mrbc_wasm_define_method(void* cls, const char* name, void* func)
+{
+  mrbc_define_method(0, (mrbc_class*)cls, name, (mrbc_func_t)func);
+}
+
+/**
+ * @brief Get an integer argument from mruby/c method call
+ * Wrapper for GET_INT_ARG macro to ensure compatibility with future mruby/c versions
+ * @param v Pointer to the value array (mrbc_value*)
+ * @param index Argument index (1-based)
+ * @return Integer value of the argument
+ */
+EMSCRIPTEN_KEEPALIVE
+int mrbc_wasm_get_int_arg(void* v, int index)
+{
+  mrbc_value* values = (mrbc_value*)v;
+  if (values[index].tt == MRBC_TT_INTEGER) {
+    return (int)values[index].i;
+  } else if (values[index].tt == MRBC_TT_FLOAT) {
+    return (int)values[index].d;
+  }
+  return 0;
+}
+
+/**
+ * @brief Get a float argument from mruby/c method call
+ * @param v Pointer to the value array (mrbc_value*)
+ * @param index Argument index (1-based)
+ * @return Float value of the argument
+ */
+EMSCRIPTEN_KEEPALIVE
+double mrbc_wasm_get_float_arg(void* v, int index)
+{
+  mrbc_value* values = (mrbc_value*)v;
+  if (values[index].tt == MRBC_TT_FLOAT) {
+    return values[index].d;
+  } else if (values[index].tt == MRBC_TT_INTEGER) {
+    return (double)values[index].i;
+  }
+  return 0.0;
+}
+
+/**
+ * @brief Check if an argument is numeric (integer or float)
+ * @param v Pointer to the value array (mrbc_value*)
+ * @param index Argument index (1-based)
+ * @return 1 if numeric, 0 otherwise
+ */
+EMSCRIPTEN_KEEPALIVE
+int mrbc_wasm_is_numeric_arg(void* v, int index)
+{
+  mrbc_value* values = (mrbc_value*)v;
+  return (values[index].tt == MRBC_TT_INTEGER || values[index].tt == MRBC_TT_FLOAT) ? 1 : 0;
+}
+
+/**
+ * @brief Set return value to boolean (true/false)
+ * Wrapper for SET_BOOL_RETURN macro to ensure compatibility with future mruby/c versions
+ * @param v Pointer to the value array (mrbc_value*)
+ * @param val Boolean value (0 = false, non-zero = true)
+ */
+EMSCRIPTEN_KEEPALIVE
+void mrbc_wasm_set_return_bool(void* v, int val)
+{
+  mrbc_value* values = (mrbc_value*)v;
+  mrbc_decref(values);
+  values[0].tt = val ? MRBC_TT_TRUE : MRBC_TT_FALSE;
+}
+
+/**
+ * @brief Set return value to nil
+ * @param v Pointer to the value array (mrbc_value*)
+ */
+EMSCRIPTEN_KEEPALIVE
+void mrbc_wasm_set_return_nil(void* v)
+{
+  mrbc_value* values = (mrbc_value*)v;
+  mrbc_decref(values);
+  values[0].tt = MRBC_TT_NIL;
+}
+
+/**
+ * @brief Set return value to integer
+ * @param v Pointer to the value array (mrbc_value*)
+ * @param val Integer value
+ */
+EMSCRIPTEN_KEEPALIVE
+void mrbc_wasm_set_return_int(void* v, int val)
+{
+  mrbc_value* values = (mrbc_value*)v;
+  mrbc_decref(values);
+  values[0].tt = MRBC_TT_INTEGER;
+  values[0].i = val;
+}
+
+/**
+ * @brief Set return value to float
+ * @param v Pointer to the value array (mrbc_value*)
+ * @param val Float value
+ */
+EMSCRIPTEN_KEEPALIVE
+void mrbc_wasm_set_return_float(void* v, double val)
+{
+  mrbc_value* values = (mrbc_value*)v;
+  mrbc_decref(values);
+  values[0].tt = MRBC_TT_FLOAT;
+  values[0].d = val;
 }
