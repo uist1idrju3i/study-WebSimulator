@@ -510,8 +510,8 @@ function cleanupYourAPI(mrubycModule) {
 }
 
 if (typeof window !== 'undefined') {
-  window.definePixelsAPI = defineYourAPI;
-  window.cleanupPixelsAPI = cleanupYourAPI;
+  window.defineYourAPI = defineYourAPI;
+  window.cleanupYourAPI = cleanupYourAPI;
 }
 ```
 
