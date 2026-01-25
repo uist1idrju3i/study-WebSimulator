@@ -130,14 +130,18 @@ class BoardLoader {
   }
 
   /**
-   * Cleanup the current board
+   * Cleanup the current board UI only
+   * Note: API callback cleanup is handled atomically within definePixelsAPI
+   * to prevent race conditions where PIXELS class methods reference invalid
+   * function pointers during board switching.
    * @param {HTMLElement} uiContainer - Container for board UI
    */
   cleanupBoard(uiContainer) {
-    // Cleanup API callbacks
-    if (this.mrubycModule && typeof window.cleanupPixelsAPI === 'function') {
-      window.cleanupPixelsAPI(this.mrubycModule);
-    }
+    // Note: We do NOT call cleanupPixelsAPI here anymore.
+    // The cleanup of old callbacks is now handled atomically within
+    // definePixelsAPI - new callbacks are registered and methods are
+    // updated BEFORE old callbacks are removed. This ensures the PIXELS
+    // class always has valid function pointers.
 
     // Cleanup UI
     if (typeof window.cleanupBoardUI === 'function' && uiContainer) {

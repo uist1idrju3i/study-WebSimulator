@@ -152,16 +152,25 @@ class MrubycWasmAPI {
 
 /**
  * Define the PIXELS API for mruby/c
+ * This function handles the atomic swap of callbacks to prevent race conditions
+ * during board switching. New callbacks are registered and methods are updated
+ * BEFORE old callbacks are removed.
  * @param {Object} mrubycModule - The mruby/c WASM module instance
  */
 function definePixelsAPI(mrubycModule) {
   // Create API wrapper instance
   const api = new MrubycWasmAPI(mrubycModule);
   
+  // Save old callbacks for cleanup AFTER new ones are registered
+  // This ensures the PIXELS class always has valid function pointers
+  const oldCallbacks = [...registeredCallbacks];
+  registeredCallbacks = [];
+  
   // Get the Object class as the super class
   const classObject = api.getClassObject();
   
-  // Define the PIXELS class
+  // Define the PIXELS class (or redefine if it already exists)
+  // mruby/c will update the existing class if it already exists
   const pixelsClass = api.defineClass('PIXELS', classObject);
   
   // Define the 'set' method (PIXELS.set(index, r, g, b))
@@ -196,6 +205,16 @@ function definePixelsAPI(mrubycModule) {
   
   registeredCallbacks.push(updateCallback);
   api.defineMethod(pixelsClass, 'update', updateCallback);
+  
+  // NOW it's safe to remove old callbacks since the PIXELS class
+  // methods now point to the new callbacks
+  for (const callback of oldCallbacks) {
+    try {
+      api.removeFunction(callback);
+    } catch (e) {
+      console.warn('Failed to remove old callback:', e);
+    }
+  }
 }
 
 /**
