@@ -2,40 +2,40 @@
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/uist1idrju3i/study-WebSimulator)
 
-mruby/cをEmscriptenでWebAssemblyにビルドし、Webブラウザ上で動作させるプロジェクトです。
+A project that compiles mruby/c to WebAssembly using Emscripten and runs it in a web browser.
 
-## 概要
+## Overview
 
-このプロジェクトは、組み込み向けRuby実装である[mruby/c](https://github.com/mrubyc/mrubyc)をWebAssembly(WASM)にコンパイルし、Webブラウザ上でmruby/cバイトコードを実行できる環境を提供します。
+This project compiles [mruby/c](https://github.com/mrubyc/mrubyc), an embedded Ruby implementation for microcontrollers, to WebAssembly (WASM) and provides an environment to execute mruby/c bytecode in a web browser.
 
-## アーキテクチャ
+## Architecture
 
-### 全体構成
+### System Overview
 
 ```mermaid
 graph TB
-    subgraph "開発環境"
-        RB[sample.rb<br/>Rubyソースコード]
-        MRBC[mrbc<br/>mruby/cコンパイラ]
-        BC[sample.mrb<br/>バイトコード配列]
+    subgraph "Development Environment"
+        RB[sample.rb<br/>Ruby Source Code]
+        MRBC[mrbc<br/>mruby/c Compiler]
+        BC[sample.mrb<br/>Bytecode Array]
     end
     
-    subgraph "ビルドシステム"
-        HAL[hal.h / hal.c<br/>HAL実装]
-        MAIN[main.c<br/>エントリポイント]
-        MRUBYC[mruby/c VM<br/>ソースコード]
-        EMCC[emcc<br/>Emscriptenコンパイラ]
+    subgraph "Build System"
+        HAL[hal.h / hal.c<br/>HAL Implementation]
+        MAIN[main.c<br/>Entry Point]
+        MRUBYC[mruby/c VM<br/>Source Code]
+        EMCC[emcc<br/>Emscripten Compiler]
     end
     
-    subgraph "出力成果物"
-        WASM[mrubyc.wasm<br/>WebAssemblyモジュール]
-        JS[mrubyc.js<br/>JavaScriptグルーコード]
+    subgraph "Build Output"
+        WASM[mrubyc.wasm<br/>WebAssembly Module]
+        JS[mrubyc.js<br/>JavaScript Glue Code]
     end
     
-    subgraph "Webブラウザ"
+    subgraph "Web Browser"
         HTML[index.html<br/>GUI]
-        RUNTIME[mruby/c VM<br/>WASM実行]
-        OUTPUT[コンソール出力]
+        RUNTIME[mruby/c VM<br/>WASM Execution]
+        OUTPUT[Console Output]
     end
     
     RB -->|mrbc| BC
@@ -52,151 +52,159 @@ graph TB
     RUNTIME --> OUTPUT
 ```
 
-### ビルドフロー
+### Build Flow
 
 ```mermaid
 sequenceDiagram
-    participant Dev as 開発者
+    participant Dev as Developer
     participant Make as Makefile
     participant EMCC as emcc
-    participant Browser as ブラウザ
+    participant Browser as Browser
     
     Dev->>Make: make
-    Make->>EMCC: ソースファイル群を渡す
-    Note over EMCC: mruby/c VM + HAL + main.c<br/>をWASMにコンパイル
+    Make->>EMCC: Pass source files
+    Note over EMCC: Compile mruby/c VM + HAL + main.c<br/>to WASM
     EMCC-->>Make: mrubyc.wasm + mrubyc.js
     
-    Dev->>Browser: index.htmlを開く
-    Browser->>Browser: mrubyc.jsをロード
-    Browser->>Browser: WASMモジュールを初期化
+    Dev->>Browser: Open index.html
+    Browser->>Browser: Load mrubyc.js
+    Browser->>Browser: Initialize WASM module
     Note over Browser: mrbc_wasm_init()
     
-    Dev->>Browser: "Run Sample Program"クリック
-    Browser->>Browser: バイトコードをWASMメモリにコピー
-    Browser->>Browser: mrbc_wasm_run()実行
-    Note over Browser: mruby/c VMがバイトコードを実行
-    Browser-->>Dev: 実行結果を表示
+    Dev->>Browser: Click "Run Sample Program"
+    Browser->>Browser: Copy bytecode to WASM memory
+    Browser->>Browser: Execute mrbc_wasm_run()
+    Note over Browser: mruby/c VM executes bytecode
+    Browser-->>Dev: Display execution result
 ```
 
-## ディレクトリ構成
+## Directory Structure
 
 ```
 study-WebSimulator/
-├── Makefile                    # Emscriptenビルド設定
-├── README.md                   # このファイル
-├── emsdk/                      # Emscripten SDK (サブモジュール)
-├── mrubyc/                     # mruby/c (サブモジュール)
-├── public_html/                # Web公開ディレクトリ
-│   ├── index.html              # HTMLマークアップ
-│   ├── style.css               # スタイルシート
-│   ├── app.js                  # アプリケーションロジック
-│   ├── sample_bytecode.js      # サンプルバイトコード
-│   └── mrubyc/                 # mruby/c WASM関連ファイル
-│       ├── mrubyc.js           # Emscripten生成JSグルーコード
-│       ├── mrubyc.wasm         # WebAssemblyモジュール
-│       └── LICENSE             # mruby/cライセンス
+├── Makefile                    # Emscripten build configuration
+├── README.md                   # This file
+├── emsdk/                      # Emscripten SDK (submodule)
+├── mrubyc/                     # mruby/c (submodule)
+├── public_html/                # Web public directory
+│   ├── index.html              # HTML markup
+│   ├── style.css               # Stylesheet
+│   ├── app.js                  # Application logic
+│   ├── sample_bytecode.js      # Sample bytecode
+│   ├── mrubyc/                 # mruby/c WASM files
+│   │   ├── mrubyc.js           # Emscripten-generated JS glue code
+│   │   ├── mrubyc.wasm         # WebAssembly module
+│   │   └── LICENSE             # mruby/c license
+│   ├── lib/
+│   │   └── board-loader.js     # Board loader
+│   └── boards/
+│       └── xiao-nrf54l15/      # Board configuration
+│           ├── board-config.js
+│           ├── api-definitions.js
+│           └── ui-components.js
 └── src/
-    ├── main.c                  # WASMエントリポイント
+    ├── main.c                  # WASM entry point
     ├── lib/
     │   └── mrubyc/
-    │       ├── hal.h           # HALヘッダー
-    │       └── hal.c           # HAL実装
+    │       ├── hal.h           # HAL header
+    │       └── hal.c           # HAL implementation
     └── rb/
-        ├── sample.rb           # サンプルRubyコード
-        └── sample.mrb          # コンパイル済みバイトコード
+        ├── sample.rb           # Sample Ruby code
+        └── sample.mrb          # Compiled bytecode
 ```
 
-## 作成・変更したファイルの解説
+## File Descriptions
 
 ### 1. Makefile
 
-Emscriptenを使用してmruby/cをWebAssemblyにビルドするための設定ファイルです。
+Build configuration for compiling mruby/c to WebAssembly using Emscripten.
 
-**主要な設定:**
+**Key Settings:**
 
-| 設定項目 | 値 | 説明 |
-|---------|-----|------|
-| `CFLAGS` | `-O3 -flto -DNDEBUG` | 最適化レベル3、デバッグ無効 |
-| `WASM=1` | - | WebAssembly出力を有効化 |
-| `ASYNCIFY` | - | 非同期処理（sleep等）のサポート |
-| `ASYNCIFY_STACK_SIZE` | `16384` | ASYNCIFY用スタックサイズ（デフォルト4096から増加） |
-| `ASYNCIFY_ADD` | `["mrbc_*","hal_*","main"]` | ASYNCIFY対象関数のパターン |
-| `MODULARIZE=1` | - | ESモジュール形式で出力 |
-| `ALLOW_MEMORY_GROWTH=1` | - | 動的メモリ拡張を許可 |
+| Setting | Value | Description |
+|---------|-------|-------------|
+| `CFLAGS` | `-O3 -flto -DNDEBUG` | Optimization level 3, debug disabled |
+| `WASM=1` | - | Enable WebAssembly output |
+| `ASYNCIFY` | - | Support for async operations (sleep, etc.) |
+| `ASYNCIFY_STACK_SIZE` | `16384` | ASYNCIFY stack size (increased from default 4096) |
+| `ASYNCIFY_ADD` | `["mrbc_*","hal_*","main"]` | Function patterns for ASYNCIFY |
+| `MODULARIZE=1` | - | Output as ES module |
+| `ALLOW_MEMORY_GROWTH=1` | - | Allow dynamic memory expansion |
 
-**エクスポートされる関数:**
-- `_mrbc_wasm_init`: VM初期化
-- `_mrbc_wasm_run`: バイトコード実行
-- `_malloc` / `_free`: メモリ管理
+**Exported Functions:**
+- `_mrbc_wasm_init`: VM initialization
+- `_mrbc_wasm_run`: Bytecode execution
+- `_malloc` / `_free`: Memory management
+- Class/method definition and instance creation APIs (see WASM API Reference)
 
-### 2. src/lib/mrubyc/hal.h (HALヘッダー)
+### 2. src/lib/mrubyc/hal.h (HAL Header)
 
-Hardware Abstraction Layer（ハードウェア抽象化レイヤー）のヘッダーファイルです。mruby/cがハードウェアに依存する部分を抽象化し、異なるプラットフォームで動作できるようにします。
+Hardware Abstraction Layer header file. Abstracts hardware-dependent parts of mruby/c to enable operation on different platforms.
 
-**変更理由:**
-- 元のファイルは`delay()`関数を使用していましたが、Emscripten環境では`emscripten_sleep()`を使用する必要があります
-- `MRBC_NO_TIMER`を定義してタイマー割り込みを無効化（ブラウザ環境では不要）
-- `MRBC_SCHEDULER_EXIT`を定義してスケジューラ終了を有効化
+**Key Changes:**
+- Uses `emscripten_sleep()` instead of `delay()` for the Emscripten environment
+- Defines `MRBC_NO_TIMER` to disable timer interrupts (not needed in browser)
+- Defines `MRBC_SCHEDULER_EXIT` to enable scheduler exit
 
 ```mermaid
 graph LR
     subgraph "HAL Interface"
-        A[hal_write] --> B[コンソール出力]
-        C[hal_flush] --> D[バッファフラッシュ]
-        E[hal_abort] --> F[エラー終了]
-        G[hal_idle_cpu] --> H[CPU待機]
-        I[hal_delay_ms] --> J[遅延処理]
+        A[hal_write] --> B[Console Output]
+        C[hal_flush] --> D[Buffer Flush]
+        E[hal_abort] --> F[Error Exit]
+        G[hal_idle_cpu] --> H[CPU Wait]
+        I[hal_delay_ms] --> J[Delay Processing]
     end
     
-    subgraph "Emscripten実装"
+    subgraph "Emscripten Implementation"
         B --> K[js_console_write]
         F --> L[emscripten_force_exit]
         J --> M[emscripten_sleep]
     end
 ```
 
-### 3. src/lib/mrubyc/hal.c (HAL実装)
+### 3. src/lib/mrubyc/hal.c (HAL Implementation)
 
-HALの具体的な実装ファイルです。Emscripten環境向けに以下の機能を実装しています。
+Concrete HAL implementation for the Emscripten environment.
 
-**実装内容:**
+**Implementation Details:**
 
-| 関数 | 説明 | 実装方法 |
-|------|------|----------|
-| `hal_write()` | 標準出力への書き込み | `EM_JS`マクロでJavaScript関数を呼び出し |
-| `hal_flush()` | バッファのフラッシュ | 何もしない（即時出力のため） |
-| `hal_abort()` | 異常終了 | エラーメッセージ表示後、`emscripten_force_exit(1)` |
-| `hal_delay_ms()` | ミリ秒単位の遅延 | `emscripten_sleep()`を使用 |
+| Function | Description | Implementation |
+|----------|-------------|----------------|
+| `hal_write()` | Write to stdout | Calls JavaScript function via `EM_JS` macro |
+| `hal_flush()` | Flush buffer | No-op (immediate output) |
+| `hal_abort()` | Abnormal termination | Display error message, then `emscripten_force_exit(1)` |
+| `hal_delay_ms()` | Millisecond delay | Uses `emscripten_sleep()` |
 
-**EM_JSマクロについて:**
-Emscriptenの`EM_JS`マクロを使用することで、C言語からJavaScript関数を直接呼び出すことができます。これにより、ブラウザのコンソールAPIやDOM操作が可能になります。
+**About the EM_JS Macro:**
+The Emscripten `EM_JS` macro allows calling JavaScript functions directly from C. This enables access to browser console APIs and DOM manipulation.
 
 ```c
 EM_JS(void, js_console_write, (const char *buf, int nbytes), {
   const text = UTF8ToString(buf, nbytes);
   if (typeof window !== 'undefined' && window.mrubycOutput) {
-    window.mrubycOutput(text);  // カスタム出力関数
+    window.mrubycOutput(text);  // Custom output function
   } else {
-    console.log(text);          // フォールバック
+    console.log(text);          // Fallback
   }
 });
 ```
 
-### 4. src/main.c (エントリポイント)
+### 4. src/main.c (Entry Point)
 
-WebAssemblyモジュールのエントリポイントです。JavaScriptから呼び出される関数を定義しています。
+WebAssembly module entry point. Defines functions called from JavaScript.
 
-**エクスポート関数:**
+**Export Functions:**
 
 ```mermaid
 graph TB
-    subgraph "JavaScript側"
+    subgraph "JavaScript Side"
         A[createMrubycModule]
         B[_mrbc_wasm_init]
         C[_mrbc_wasm_run]
     end
     
-    subgraph "C側 main.c"
+    subgraph "C Side main.c"
         E[mrbc_wasm_init]
         F[mrbc_wasm_run]
     end
@@ -218,36 +226,40 @@ graph TB
     F --> K
 ```
 
-**メモリ管理:**
-- 40KBの静的メモリプールを確保
-- mruby/cのメモリアロケータがこのプール内でメモリを管理
-- 実行後は`mrbc_cleanup()`でリソースを解放し、再初期化
+**Memory Management:**
+- Allocates a 40KB static memory pool
+- mruby/c memory allocator manages memory within this pool
+- Resources are released with `mrbc_cleanup()` after execution and reinitialized
 
-### 5. public_html/index.html (HTMLマークアップ)
+**Task Callback Mechanism:**
+After bytecode is loaded with `mrbc_create_task()` but before execution with `mrbc_run()`, a JavaScript callback (`window.mrubycOnTaskCreated`) is invoked. This ensures that board APIs (like PIXELS) are defined with symbol IDs that match those in the bytecode.
 
-ブラウザ上でmruby/cを操作するためのユーザーインターフェースのHTMLマークアップです。スタイルとロジックは別ファイル（style.css, app.js）に分離されています。
+### 5. public_html/index.html (HTML Markup)
 
-**機能:**
-1. **ステータス表示**: モジュールの読み込み状態とバージョン情報
-2. **サンプル実行**: 組み込みのサンプルプログラムを実行
-3. **カスタムバイトコード**: `.mrb`ファイルをアップロードして実行
-4. **出力コンソール**: 実行結果をリアルタイム表示
+HTML markup for the user interface to operate mruby/c in the browser. Styles and logic are separated into separate files (style.css, app.js).
 
-### 6. public_html/style.css (スタイルシート)
+**Features:**
+1. **Status Display**: Module loading state and version information
+2. **Sample Execution**: Run built-in sample program
+3. **Custom Bytecode**: Upload and execute `.mrb` files
+4. **Output Console**: Real-time display of execution results
 
-GUIのスタイル定義を含むCSSファイルです。レスポンシブデザインに対応し、ダークテーマのコンソール表示を実装しています。
+### 6. public_html/style.css (Stylesheet)
 
-### 7. public_html/app.js (アプリケーションロジック)
+CSS file containing GUI style definitions. Supports responsive design and implements dark-themed console display.
 
-WASMモジュールの初期化、バイトコード実行、ファイルアップロード処理などのアプリケーションロジックを含むJavaScriptファイルです。
+### 7. public_html/app.js (Application Logic)
 
-**主要な機能:**
-- WASMモジュールの非同期初期化
-- バイトコードのメモリコピーと実行（`ccall`の`async: true`オプションでASYNCIFYに対応）
-- ファイルサイズ検証（1MB制限）
-- エラーハンドリングとメモリ解放
+JavaScript file containing application logic for WASM module initialization, bytecode execution, file upload handling, etc.
 
-**JavaScript-WASM連携:**
+**Key Features:**
+- Async initialization of WASM module
+- Bytecode memory copy and execution (`ccall` with `async: true` option for ASYNCIFY support)
+- File size validation (1MB limit)
+- Error handling and memory release
+- Task creation callback (`mrubycOnTaskCreated`) for board API definition
+
+**JavaScript-WASM Integration:**
 
 ```mermaid
 sequenceDiagram
@@ -256,57 +268,62 @@ sequenceDiagram
     participant WASM as mrubyc.wasm
     participant HAL as HAL (hal.c)
     
-    HTML->>JS: ページロード
+    HTML->>JS: Page load
     JS->>WASM: createMrubycModule()
-    WASM-->>JS: モジュールインスタンス
+    WASM-->>JS: Module instance
     JS->>WASM: _mrbc_wasm_init()
     
-    HTML->>JS: "Run Sample Program"クリック
-    JS->>JS: バイトコードをUint8Arrayに変換
+    HTML->>JS: Click "Run Sample Program"
+    JS->>JS: Convert bytecode to Uint8Array
     JS->>WASM: _malloc(size)
-    WASM-->>JS: メモリポインタ
-    JS->>JS: wasmMemory.bufferにバイトコードをコピー
+    WASM-->>JS: Memory pointer
+    JS->>JS: Copy bytecode to wasmMemory.buffer
     JS->>WASM: _mrbc_wasm_run(ptr, size)
     
-    loop バイトコード実行
+    Note over WASM: After mrbc_create_task()
+    WASM->>JS: js_on_task_created()
+    JS->>JS: window.mrubycOnTaskCreated()
+    JS->>WASM: Define board APIs (PIXELS, etc.)
+    
+    loop Bytecode Execution
         WASM->>HAL: hal_write(fd, buf, nbytes)
         HAL->>JS: window.mrubycOutput(text)
-        JS->>HTML: コンソールに出力追加
+        JS->>HTML: Add output to console
     end
     
-    WASM-->>JS: 実行結果
+    WASM-->>JS: Execution result
     JS->>WASM: _free(ptr)
-    JS->>HTML: 完了メッセージ表示
+    JS->>HTML: Display completion message
 ```
 
 ### 8. public_html/sample_bytecode.js
 
-`src/rb/sample.mrb`のバイトコードをJavaScript配列として定義したファイルです。
+JavaScript file defining the bytecode from `src/rb/sample.mrb` as a JavaScript array.
 
-**元のRubyコード (sample.rb):**
+**Original Ruby Code (sample.rb):**
+The sample program displays a rainbow circle animation on a 6x10 RGB LED matrix using HSV to RGB color conversion. It uses `PIXELS.set(index, r, g, b)` to set individual LED colors and `PIXELS.update()` to refresh the display.
+
 ```ruby
-printf "#{RUBY_ENGINE} #{MRUBYC_VERSION} (mruby:#{MRUBY_VERSION} ruby:#{RUBY_VERSION})\n"
-puts "Hello, mruby/c!"
-sleep_ms 1000
-puts "Goodbye!"
+puts ("Hello Ruby")
+# ... LED matrix animation using PIXELS.set() and PIXELS.update() ...
 ```
 
-## ビルド方法
+## Build Instructions
 
-### 前提条件
+### Prerequisites
 
-- Git（サブモジュール取得用）
-- Python 3（Emscripten SDK用）
+- Git (for submodule retrieval)
+- Python 3 (for Emscripten SDK)
 
-### 手順
+### Steps
 
-1. **リポジトリのクローン**
+1. **Clone the Repository**
    ```bash
    git clone --recursive https://github.com/uist1idrju3i/study-WebSimulator.git
    cd study-WebSimulator
    ```
 
-2. **Emscripten SDKのセットアップ**
+2. **Set Up Emscripten SDK**
    ```bash
    cd emsdk
    ./emsdk install latest
@@ -315,46 +332,46 @@ puts "Goodbye!"
    cd ..
    ```
 
-3. **ビルド**
+3. **Build**
    ```bash
    make
    ```
 
-4. **ローカルサーバーで実行**
+4. **Run Local Server**
    ```bash
    cd public_html
    python3 -m http.server 8080
    ```
 
-5. **ブラウザでアクセス**
+5. **Access in Browser**
    ```
    http://localhost:8080/
    ```
 
-## 技術的な詳細
+## Technical Details
 
-### ASYNCIFYについて
+### About ASYNCIFY
 
-Emscriptenの`ASYNCIFY`機能は、同期的なC関数を非同期的に実行できるようにします。これにより、`sleep_ms()`のような待機関数がブラウザのイベントループをブロックせずに動作します。
+Emscripten's `ASYNCIFY` feature allows synchronous C functions to execute asynchronously. This enables wait functions like `sleep_ms()` to work without blocking the browser's event loop.
 
 ```mermaid
 graph TB
-    subgraph "ASYNCIFYなし"
-        A1[sleep_ms呼び出し] --> B1[ブラウザがフリーズ]
-        B1 --> C1[UIが応答しない]
+    subgraph "Without ASYNCIFY"
+        A1[sleep_ms call] --> B1[Browser freezes]
+        B1 --> C1[UI unresponsive]
     end
     
-    subgraph "ASYNCIFYあり"
-        A2[sleep_ms呼び出し] --> B2[emscripten_sleep]
-        B2 --> C2[制御をブラウザに返す]
-        C2 --> D2[タイマー後に再開]
-        D2 --> E2[UIは応答可能]
+    subgraph "With ASYNCIFY"
+        A2[sleep_ms call] --> B2[emscripten_sleep]
+        B2 --> C2[Return control to browser]
+        C2 --> D2[Resume after timer]
+        D2 --> E2[UI remains responsive]
     end
 ```
 
-### メモリ管理
+### Memory Management
 
-WebAssemblyのメモリは線形メモリとして管理されます。JavaScriptからWASMメモリにアクセスするには、`wasmMemory.buffer`を使用します。
+WebAssembly memory is managed as linear memory. To access WASM memory from JavaScript, use `wasmMemory.buffer`.
 
 ```javascript
 const bytecodePtr = mrubycModule._malloc(bytecode.length);
@@ -362,27 +379,27 @@ const heapU8 = new Uint8Array(mrubycModule.wasmMemory.buffer);
 heapU8.set(bytecode, bytecodePtr);
 ```
 
-## ボード設定の作成方法
+## Creating Board Configurations
 
-このプロジェクトでは、Cコードを再コンパイルすることなく、JavaScript側だけで新しいマイコンボードのサポートを追加できます。
+This project allows adding support for new microcontroller boards through JavaScript alone, without recompiling C code.
 
-### ディレクトリ構造
+### Directory Structure
 
-新しいボードを追加するには、`public_html/boards/` ディレクトリ内に以下の構造でファイルを作成します：
+To add a new board, create files in the `public_html/boards/` directory with the following structure:
 
 ```
 public_html/boards/
 └── your-board-id/
-    ├── board-config.js      # ボード固有の設定
-    ├── ui-components.js     # UI生成コード
-    └── api-definitions.js   # mruby/c APIの定義
+    ├── board-config.js      # Board-specific configuration
+    ├── ui-components.js     # UI generation code
+    └── api-definitions.js   # mruby/c API definitions
 ```
 
-### 必要なファイル
+### Required Files
 
 #### 1. board-config.js
 
-ボードの基本設定を定義します：
+Defines basic board settings:
 
 ```javascript
 const BOARD_CONFIG = {
@@ -391,9 +408,9 @@ const BOARD_CONFIG = {
   description: "Description of your board",
   
   ui: {
-    matrixWidth: 10,    // LEDマトリックスの幅
-    matrixHeight: 6,    // LEDマトリックスの高さ
-    totalPixels: 60     // 総LED数
+    matrixWidth: 10,    // LED matrix width
+    matrixHeight: 6,    // LED matrix height
+    totalPixels: 60     // Total LED count
   }
 };
 
@@ -404,7 +421,7 @@ if (typeof window !== 'undefined') {
 
 #### 2. api-definitions.js
 
-mruby/c用のクラスとメソッドを定義します。`MrubycWasmAPI`クラスを使用してWASM APIにアクセスします：
+Defines classes and methods for mruby/c. Uses the `MrubycWasmAPI` class to access WASM APIs:
 
 ```javascript
 let registeredCallbacks = [];
@@ -414,7 +431,7 @@ class MrubycWasmAPI {
     this.module = module;
   }
 
-  // クラス定義
+  // Class definition
   getClassObject() {
     return this.module._mrbc_wasm_get_class_object();
   }
@@ -433,7 +450,7 @@ class MrubycWasmAPI {
     );
   }
 
-  // 引数取得メソッド
+  // Argument retrieval methods
   getIntArg(vPtr, index) {
     return this.module._mrbc_wasm_get_int_arg(vPtr, index);
   }
@@ -446,7 +463,7 @@ class MrubycWasmAPI {
     return this.module._mrbc_wasm_is_numeric_arg(vPtr, index) !== 0;
   }
 
-  // 戻り値設定メソッド
+  // Return value setting methods
   setReturnBool(vPtr, val) {
     this.module._mrbc_wasm_set_return_bool(vPtr, val ? 1 : 0);
   }
@@ -463,7 +480,23 @@ class MrubycWasmAPI {
     this.module._mrbc_wasm_set_return_float(vPtr, val);
   }
 
-  // コールバック関数の登録
+  // Instance creation and global constants
+  instanceNew(cls) {
+    return this.module._mrbc_wasm_instance_new(cls);
+  }
+
+  setGlobalConst(name, value) {
+    this.module.ccall(
+      'mrbc_wasm_set_global_const', null,
+      ['string', 'number'], [name, value]
+    );
+  }
+
+  freeInstance(instance) {
+    this.module._mrbc_wasm_free_instance(instance);
+  }
+
+  // Callback function registration
   addFunction(func, signature) {
     return this.module.addFunction(func, signature);
   }
@@ -477,16 +510,16 @@ function defineYourAPI(mrubycModule) {
   const api = new MrubycWasmAPI(mrubycModule);
   const classObject = api.getClassObject();
   
-  // クラスの定義
-  const yourClass = api.defineClass('YOUR_CLASS', classObject);
+  // Define class
+  const yourClass = api.defineClass('YourClass', classObject);
   
-  // メソッドの定義
-  // シグネチャ: void func(mrb_vm *vm, mrb_value *v, int argc)
+  // Define method
+  // Signature: void func(mrb_vm *vm, mrb_value *v, int argc)
   const methodCallback = api.addFunction((vmPtr, vPtr, argc) => {
-    // 引数の取得
+    // Get arguments
     if (api.isNumericArg(vPtr, 1)) {
       const arg1 = api.getIntArg(vPtr, 1);
-      // 処理...
+      // Processing...
       api.setReturnBool(vPtr, true);
     } else {
       api.setReturnBool(vPtr, false);
@@ -495,6 +528,12 @@ function defineYourAPI(mrubycModule) {
   
   registeredCallbacks.push(methodCallback);
   api.defineMethod(yourClass, 'method_name', methodCallback);
+  
+  // Create instance and set as global constant
+  const instance = api.instanceNew(yourClass);
+  if (instance) {
+    api.setGlobalConst('YOUR_CONSTANT', instance);
+  }
 }
 
 function cleanupYourAPI(mrubycModule) {
@@ -503,7 +542,7 @@ function cleanupYourAPI(mrubycModule) {
     try {
       api.removeFunction(callback);
     } catch (e) {
-      console.warn('Failed to remove callback:', e);
+      // Ignore cleanup errors
     }
   }
   registeredCallbacks = [];
@@ -517,7 +556,7 @@ if (typeof window !== 'undefined') {
 
 #### 3. ui-components.js
 
-ボード固有のUI要素を生成します：
+Generates board-specific UI elements:
 
 ```javascript
 function createBoardUI(container, config) {
@@ -560,9 +599,9 @@ if (typeof window !== 'undefined') {
 }
 ```
 
-### 新しいボードの登録
+### Registering a New Board
 
-`public_html/lib/board-loader.js` の `availableBoards` 配列に新しいボードを追加します：
+Add the new board to the `availableBoards` array in `public_html/lib/board-loader.js`:
 
 ```javascript
 this.availableBoards = [
@@ -571,7 +610,7 @@ this.availableBoards = [
 ];
 ```
 
-または、実行時に動的に登録することもできます：
+Or register dynamically at runtime:
 
 ```javascript
 boardLoader.registerBoard({
@@ -581,46 +620,51 @@ boardLoader.registerBoard({
 });
 ```
 
-### WASM API リファレンス
+### WASM API Reference
 
-| C関数 | JavaScript API | 説明 |
-|-------|---------------|------|
-| `mrbc_wasm_get_class_object()` | `api.getClassObject()` | Objectクラスのポインタを取得 |
-| `mrbc_wasm_define_class()` | `api.defineClass(name, super)` | 新しいクラスを定義 |
-| `mrbc_wasm_define_method()` | `api.defineMethod(cls, name, func)` | メソッドを定義 |
-| `mrbc_wasm_get_int_arg()` | `api.getIntArg(vPtr, index)` | 整数引数を取得 |
-| `mrbc_wasm_get_float_arg()` | `api.getFloatArg(vPtr, index)` | 浮動小数点引数を取得 |
-| `mrbc_wasm_is_numeric_arg()` | `api.isNumericArg(vPtr, index)` | 引数が数値かチェック |
-| `mrbc_wasm_set_return_bool()` | `api.setReturnBool(vPtr, val)` | 真偽値を返す |
-| `mrbc_wasm_set_return_nil()` | `api.setReturnNil(vPtr)` | nilを返す |
-| `mrbc_wasm_set_return_int()` | `api.setReturnInt(vPtr, val)` | 整数を返す |
-| `mrbc_wasm_set_return_float()` | `api.setReturnFloat(vPtr, val)` | 浮動小数点数を返す |
+| C Function | JavaScript API | Description |
+|------------|----------------|-------------|
+| `mrbc_wasm_get_class_object()` | `api.getClassObject()` | Get Object class pointer |
+| `mrbc_wasm_define_class()` | `api.defineClass(name, super)` | Define a new class |
+| `mrbc_wasm_define_method()` | `api.defineMethod(cls, name, func)` | Define a method |
+| `mrbc_wasm_get_int_arg()` | `api.getIntArg(vPtr, index)` | Get integer argument |
+| `mrbc_wasm_get_float_arg()` | `api.getFloatArg(vPtr, index)` | Get float argument |
+| `mrbc_wasm_is_numeric_arg()` | `api.isNumericArg(vPtr, index)` | Check if argument is numeric |
+| `mrbc_wasm_set_return_bool()` | `api.setReturnBool(vPtr, val)` | Return boolean value |
+| `mrbc_wasm_set_return_nil()` | `api.setReturnNil(vPtr)` | Return nil |
+| `mrbc_wasm_set_return_int()` | `api.setReturnInt(vPtr, val)` | Return integer value |
+| `mrbc_wasm_set_return_float()` | `api.setReturnFloat(vPtr, val)` | Return float value |
+| `mrbc_wasm_instance_new()` | `api.instanceNew(cls)` | Create new class instance |
+| `mrbc_wasm_set_global_const()` | `api.setGlobalConst(name, value)` | Set global constant |
+| `mrbc_wasm_free_instance()` | `api.freeInstance(instance)` | Free instance memory |
 
-### デバッグ方法
+### Debugging
 
-1. ブラウザの開発者ツールを開く（F12）
-2. コンソールタブでエラーメッセージを確認
-3. `console.log()` を使用してデバッグ情報を出力
-4. ネットワークタブでスクリプトの読み込みを確認
+1. Open browser developer tools (F12)
+2. Check error messages in the Console tab
+3. Use `console.log()` to output debug information
+4. Check script loading in the Network tab
 
-### 注意事項
+### Important Notes
 
-1. **メモリ管理**: `addFunction()` で作成したコールバック関数は、ボード切り替え時に `removeFunction()` で適切に解放してください。
+1. **Memory Management**: Callback functions created with `addFunction()` must be properly released with `removeFunction()` when switching boards.
 
-2. **エラーハンドリング**: JavaScript-WASM間の呼び出しは型安全ではないため、適切なバリデーションとエラーハンドリングを実装してください。
+2. **Error Handling**: Calls between JavaScript and WASM are not type-safe, so implement proper validation and error handling.
 
-3. **コールバック署名**: mruby/cメソッドのコールバック関数は `'viii'` シグネチャ（void, int, int, int）を使用します。
+3. **Callback Signature**: mruby/c method callback functions use the `'viii'` signature (void, int, int, int).
 
-## ライセンス
+4. **Symbol ID Matching**: Board APIs must be defined after bytecode is loaded (via `mrubycOnTaskCreated` callback) to ensure symbol IDs match between method definitions and bytecode.
 
-このプロジェクトはBSD 3-Clause Licenseの下で配布されています。
+## License
 
-mruby/cは以下の著作権者によるものです：
+This project is distributed under the BSD 3-Clause License.
+
+mruby/c is copyrighted by:
 - Copyright (C) 2015- Kyushu Institute of Technology.
 - Copyright (C) 2015- Shimane IT Open-Innovation Center.
 
-## 参考リンク
+## References
 
-- [mruby/c](https://github.com/mrubyc/mrubyc) - 組み込み向けRuby実装
-- [Emscripten](https://emscripten.org/) - C/C++からWebAssemblyへのコンパイラ
-- [WebAssembly](https://webassembly.org/) - ブラウザで動作するバイナリ形式
+- [mruby/c](https://github.com/mrubyc/mrubyc) - Embedded Ruby implementation
+- [Emscripten](https://emscripten.org/) - C/C++ to WebAssembly compiler
+- [WebAssembly](https://webassembly.org/) - Binary format for browsers
