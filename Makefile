@@ -36,7 +36,7 @@ CFLAGS = -O3 \
 # either by overriding EMFLAGS on the command line or in a separate debug Makefile.
 EMFLAGS = -s WASM=1 \
           -s EXPORTED_RUNTIME_METHODS='["ccall","cwrap","UTF8ToString","wasmMemory","addFunction","removeFunction"]' \
-          -s EXPORTED_FUNCTIONS='["_main","_mrbc_wasm_init","_mrbc_wasm_run","_mrbc_wasm_print_statistics","_malloc","_free","_mrbc_wasm_get_class_object","_mrbc_wasm_define_class","_mrbc_wasm_define_method","_mrbc_wasm_get_int_arg","_mrbc_wasm_get_float_arg","_mrbc_wasm_is_numeric_arg","_mrbc_wasm_set_return_bool","_mrbc_wasm_set_return_nil","_mrbc_wasm_set_return_int","_mrbc_wasm_set_return_float"]' \
+          -s EXPORTED_FUNCTIONS='["_main","_mrbc_wasm_init","_mrbc_wasm_run","_mrbc_wasm_print_statistics","_malloc","_free","_mrbc_wasm_get_class_object","_mrbc_wasm_define_class","_mrbc_wasm_define_method","_mrbc_wasm_get_int_arg","_mrbc_wasm_get_float_arg","_mrbc_wasm_is_numeric_arg","_mrbc_wasm_set_return_bool","_mrbc_wasm_set_return_nil","_mrbc_wasm_set_return_int","_mrbc_wasm_set_return_float","_mrbc_wasm_instance_new","_mrbc_wasm_set_global_const","_mrbc_wasm_free_instance"]' \
           -s ALLOW_TABLE_GROWTH=1 \
           -s ALLOW_MEMORY_GROWTH=1 \
           -s INITIAL_MEMORY=16777216 \

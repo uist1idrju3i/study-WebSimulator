@@ -46,6 +46,14 @@ window.mrubycError = function(text) {
   appendOutput(text, 'error');
 };
 
+// Callback called after bytecode is loaded but before execution
+// This is the right time to define board APIs so symbol IDs match
+window.mrubycOnTaskCreated = function() {
+  if (boardLoader && mrubycModule && typeof window.definePixelsAPI === 'function') {
+    window.definePixelsAPI(mrubycModule);
+  }
+};
+
 async function initModule() {
   try {
     mrubycModule = await createMrubycModule();
@@ -56,7 +64,6 @@ async function initModule() {
     
     // Initialize board loader
     boardLoader = new BoardLoader();
-    boardLoader.setModule(mrubycModule);
     
     // Populate board selector
     const boards = boardLoader.getAvailableBoards();

@@ -14,7 +14,6 @@ class BoardLoader {
     this.currentBoard = null;
     this.currentBoardId = null;
     this.loadedScripts = [];
-    this.mrubycModule = null;
     
     // Available boards registry
     this.availableBoards = [
@@ -24,14 +23,6 @@ class BoardLoader {
         path: 'boards/xiao-nrf54l15'
       }
     ];
-  }
-
-  /**
-   * Set the mruby/c WASM module reference
-   * @param {Object} module - The mruby/c WASM module instance
-   */
-  setModule(module) {
-    this.mrubycModule = module;
   }
 
   /**
@@ -117,10 +108,9 @@ class BoardLoader {
         window.createBoardUI(uiContainer, this.currentBoard);
       }
 
-      // Define the API if module is available
-      if (this.mrubycModule && typeof window.definePixelsAPI === 'function') {
-        window.definePixelsAPI(this.mrubycModule);
-      }
+      // Note: definePixelsAPI is now called from mrubycOnTaskCreated callback
+      // after bytecode is loaded but before execution. This ensures symbol IDs
+      // match between method definitions and bytecode.
 
       return true;
     } catch (error) {
